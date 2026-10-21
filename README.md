@@ -5,7 +5,7 @@
 <p align="center">
   <b>Telegram Client</b> ➔ <b>Caddy (HTTPS/TLS)</b> ➔ <b>n8n Workflow Engine</b> ➔ <b>Google Gemini AI</b> ➔ <b>PostgreSQL 16</b>
   <br>
-  <i>Integrasi alur komunikasi data otomatis untuk pencatatan transaksi keuangan personal secara cerdas, aman, dan mandiri.</i>
+  <i>Integrasi alur komunikasi data otomatis untuk pencatatan transaksi keuangan personal secara cerdas, aman, dan mandiri. </i>
 </p>
 
 ---

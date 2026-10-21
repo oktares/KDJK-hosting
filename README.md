@@ -9,6 +9,7 @@
   <a href="https://caddyserver.com"><img src="https://img.shields.io/badge/Caddy-Auto_SSL-1F88C0?style=for-the-badge&logo=caddy&logoColor=white" alt="Caddy"></a>
   <a href="https://www.duckdns.org"><img src="https://img.shields.io/badge/DuckDNS-Dynamic_DNS-FFA500?style=for-the-badge&logo=duckduckgo&logoColor=white" alt="DuckDNS"></a>
   <a href="https://ai.google.dev"><img src="https://img.shields.io/badge/Google_Gemini-3.8_Flash-8E75C2?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini"></a>
+  <a href="https://groq.com"><img src="https://img.shields.io/badge/Groq-LPU_Inference-F55036?style=for-the-badge&logo=lightning&logoColor=white" alt="Groq"></a>
   <a href="https://core.telegram.org/bots"><img src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram"></a>
   <a href="https://github.com/actions"><img src="https://img.shields.io/badge/GitHub_Actions-CI%2FCD-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" alt="GitHub Actions"></a>
 </p>
@@ -835,11 +836,24 @@ WHERE telegram_user_id = $1;
 
 ---
 
-## 9. Integrasi Google Gemini AI & Resilient Fallback Parsing
+## 9. Integrasi AI Engine (Groq LPU & Google Gemini) & Resilient Fallback Parsing
 
-### 9.1 Pembuatan API Key di Google AI Studio
+### 9.1 Groq LPU Engine (Qwen 27B / GPT-OSS 20B) — Inferensi Ultra-Cepat (~70 ms)
 
-Model AI yang digunakan adalah **Google Gemini** melalui konsol Google AI Studio:
+Untuk mencapai latensi komunikasi data serendah mungkin, arsitektur bot dilengkapi dengan **Groq LPU (Language Processing Unit)** yang mengoptimalkan pemrosesan Tensor pada chip khusus.
+
+1. **Keunggulan**: Waktu respons hanya **~70 ms** (4x lipat lebih cepat daripada API konvensional) dengan akurasi pemahaman konteks transaksi berbahasa Indonesia yang tinggi.
+2. **Model yang Didukung**: `qwen/qwen3.8-27b` dan `openai/gpt-oss-20b`.
+3. **Pendaftaran & API Key**:
+   - Buka konsol: **[https://console.groq.com/keys](https://console.groq.com/keys)**.
+   - Buat API Key baru (diawali dengan `gsk_...`).
+   - Masukkan string ke variabel `GROQ_API_KEY` di berkas `.env`.
+
+---
+
+### 9.2 Pembuatan API Key di Google AI Studio (Gemini)
+
+Model AI alternatif yang didukung adalah **Google Gemini** melalui konsol Google AI Studio:
 
 1. Kunjungi konsol: **[https://aistudio.google.com](https://aistudio.google.com/)**.
 2. Masuk menggunakan akun Google Anda.
@@ -850,11 +864,12 @@ Model AI yang digunakan adalah **Google Gemini** melalui konsol Google AI Studio
 
 ---
 
-### 9.2 Pemilihan Model (`gemini-3.8-flash` vs `gemini-3.5-flash-lite`)
+### 9.3 Pemilihan Model AI (`qwen3.8-27b`, `gemini-3.8-flash`, `gemini-3.5-flash-lite`)
 
-Proyek ini dirancang kompatibel dengan model generasi mutakhir keluarga Gemini Flash:
-- **`gemini-3.8-flash`** (Direkomendasikan): Menawarkan keseimbangan optimal antara kecepatan inferensi (~280 ms), pemahaman konteks bahasa gaul Indonesia (slang finansial seperti *'cepek'*, *'gocap'*, *'goceng'*, *'rebu'*, *'jeti'*), dan kepatuhan terhadap format JSON.
-- **`gemini-3.5-flash-lite`** / **`gemini-2.5-flash`**: Alternatif berbobot ringan untuk meminimalkan konsumsi token pada akun free-tier dengan kuota terbatas.
+Proyek ini dirancang secara modular dan kompatibel dengan model generasi mutakhir:
+- **`qwen/qwen3.8-27b` via Groq**: Inferensi ultra-cepat (~70 ms), format JSON murni (`response_format: {"type": "json_object"}`), hemat kuota.
+- **`gemini-3.8-flash`**: Keseimbangan pemahaman konteks slang finansial Indonesia (*'cepek'*, *'gocap'*, *'goceng'*, *'rebu'*, *'jeti'*).
+- **`gemini-3.5-flash-lite`**: Alternatif hemat token.
 
 ---
 

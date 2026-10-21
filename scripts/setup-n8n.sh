@@ -86,6 +86,14 @@ mkdir -p "${INSTALL_DIR}/backups"
 RANDOM_PG_PASS=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9' | head -c 16)
 RANDOM_ENC_KEY=$(openssl rand -hex 24)
 
+# Pertahankan kredensial lama jika .env sudah ada agar tidak terjadi mismatch encryption key
+if [ -f "${INSTALL_DIR}/.env" ]; then
+    EXISTING_ENC=$(grep -E '^N8N_ENCRYPTION_KEY=' "${INSTALL_DIR}/.env" | cut -d '=' -f2- | tr -d ' ' || true)
+    EXISTING_PG=$(grep -E '^POSTGRES_PASSWORD=' "${INSTALL_DIR}/.env" | cut -d '=' -f2- | tr -d ' ' || true)
+    [ -n "$EXISTING_ENC" ] && RANDOM_ENC_KEY="$EXISTING_ENC"
+    [ -n "$EXISTING_PG" ] && RANDOM_PG_PASS="$EXISTING_PG"
+fi
+
 # Buat file .env
 cat <<EOF > "${INSTALL_DIR}/.env"
 SUBDOMAIN=${INPUT_SUBDOMAIN}

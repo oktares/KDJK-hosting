@@ -130,12 +130,13 @@ if [ "${CURRENT_DIR}" != "${INSTALL_DIR}" ]; then
     [ -f "${CURRENT_DIR}/scripts/init-db.sql" ] && cp "${CURRENT_DIR}/scripts/init-db.sql" "${INSTALL_DIR}/scripts/"
     [ -f "${CURRENT_DIR}/scripts/backup-n8n.sh" ] && cp "${CURRENT_DIR}/scripts/backup-n8n.sh" "${INSTALL_DIR}/scripts/"
     [ -f "${CURRENT_DIR}/scripts/update-n8n.sh" ] && cp "${CURRENT_DIR}/scripts/update-n8n.sh" "${INSTALL_DIR}/scripts/"
+    [ -f "${CURRENT_DIR}/scripts/sync-workflow.py" ] && cp "${CURRENT_DIR}/scripts/sync-workflow.py" "${INSTALL_DIR}/scripts/"
     if [ -d "${CURRENT_DIR}/workflows" ]; then
         cp -r "${CURRENT_DIR}/workflows/"* "${INSTALL_DIR}/workflows/" || true
     fi
 fi
 
-chmod +x "${INSTALL_DIR}"/scripts/*.sh 2>/dev/null || true
+chmod +x "${INSTALL_DIR}"/scripts/*.sh "${INSTALL_DIR}"/scripts/*.py 2>/dev/null || true
 if [ -f "${INSTALL_DIR}/workflows/personal-finance-bot.json" ]; then
     sed -i "s|YOUR_GEMINI_API_KEY|${INPUT_GEMINI_KEY}|g" "${INSTALL_DIR}/workflows/personal-finance-bot.json"
     sed -i "s|YOUR_GROQ_API_KEY|${INPUT_GROQ_KEY}|g" "${INSTALL_DIR}/workflows/personal-finance-bot.json"

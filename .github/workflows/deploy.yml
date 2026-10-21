@@ -34,6 +34,11 @@ jobs:
           bash -n scripts/update-n8n.sh
           echo "✅ Shell scripts syntax is valid."
 
+      - name: 🐍 Validate Python Scripts Syntax
+        run: |
+          python3 -m py_compile scripts/sync-workflow.py
+          echo "✅ scripts/sync-workflow.py syntax is valid."
+
   deploy:
     name: 🚀 Deploy to VPS (103.160.212.91)
     needs: [validate]
@@ -72,7 +77,7 @@ jobs:
             git reset --hard origin/main
 
             # 3. Beri izin eksekusi skrip
-            chmod +x scripts/*.sh
+            chmod +x scripts/*.sh scripts/*.py || true
 
             # 4. Periksa apakah .env sudah ada (pernah setup awal)
             if [ -f .env ]; then
@@ -82,6 +87,10 @@ jobs:
               echo "[INFO] Membersihkan image lama yang tidak terpakai..."
               docker image prune -f
               echo "[SUCCESS] Kontainer n8n, Caddy, dan PostgreSQL aktif dan mutakhir!"
+
+              # 5. Smart Workflow Sync & Auto-Publish (Hanya reload/publish jika ada perubahan)
+              echo "[INFO] Menjalankan sinkronisasi alur kerja bot & auto-publish..."
+              python3 scripts/sync-workflow.py
             else
               echo "[WARNING] File .env belum ditemukan di $INSTALL_DIR!"
               echo "Harap jalankan setup manual pertama kali di terminal VPS:"

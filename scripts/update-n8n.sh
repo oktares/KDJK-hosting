@@ -28,4 +28,10 @@ docker compose up -d
 echo "[INFO] Menghapus cache image lama yang tidak terpakai..."
 docker image prune -f
 
+# 5. Smart Workflow Sync & Auto-Publish (Hanya reload/publish jika ada perubahan)
+if [ -f "${INSTALL_DIR}/scripts/sync-workflow.py" ]; then
+    echo "[INFO] Memeriksa sinkronisasi alur kerja bot..."
+    python3 "${INSTALL_DIR}/scripts/sync-workflow.py"
+fi
+
 echo "[SUCCESS] Update n8n selesai! Periksa log dengan: docker compose logs -f n8n"

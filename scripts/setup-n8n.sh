@@ -30,6 +30,7 @@ read -rp "Masukkan Email untuk Sertifikat SSL Let's Encrypt: " INPUT_EMAIL
 read -rp "Masukkan Google Gemini API Key [Tekan Enter untuk memakai default]: " INPUT_GEMINI_KEY
 
 INPUT_SUBDOMAIN=${INPUT_SUBDOMAIN:-n8n}
+INPUT_DOMAIN="${INPUT_DOMAIN#.}"
 INPUT_GEMINI_KEY=${INPUT_GEMINI_KEY:-YOUR_GEMINI_API_KEY}
 if [[ -z "$INPUT_DOMAIN" || -z "$INPUT_EMAIL" ]]; then
     echo -e "${RED}[ERROR] Domain dan Email tidak boleh kosong!${NC}"
@@ -112,30 +113,20 @@ CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 mkdir -p "${INSTALL_DIR}/scripts"
 mkdir -p "${INSTALL_DIR}/workflows"
 
-if [ -f "${CURRENT_DIR}/docker-compose.yml" ]; then
-    cp "${CURRENT_DIR}/docker-compose.yml" "${INSTALL_DIR}/"
-    cp "${CURRENT_DIR}/Caddyfile" "${INSTALL_DIR}/"
-fi
-
-if [ -f "${CURRENT_DIR}/scripts/init-db.sql" ]; then
-    cp "${CURRENT_DIR}/scripts/init-db.sql" "${INSTALL_DIR}/scripts/"
-fi
-
-if [ -f "${CURRENT_DIR}/scripts/backup-n8n.sh" ]; then
-    cp "${CURRENT_DIR}/scripts/backup-n8n.sh" "${INSTALL_DIR}/scripts/"
-    chmod +x "${INSTALL_DIR}/scripts/backup-n8n.sh"
-fi
-
-if [ -f "${CURRENT_DIR}/scripts/update-n8n.sh" ]; then
-    cp "${CURRENT_DIR}/scripts/update-n8n.sh" "${INSTALL_DIR}/scripts/"
-    chmod +x "${INSTALL_DIR}/scripts/update-n8n.sh"
-fi
-
-if [ -d "${CURRENT_DIR}/workflows" ]; then
-    cp -r "${CURRENT_DIR}/workflows/"* "${INSTALL_DIR}/workflows/" || true
-    if [ -f "${INSTALL_DIR}/workflows/personal-finance-bot.json" ]; then
-        sed -i "s|YOUR_GEMINI_API_KEY|${INPUT_GEMINI_KEY}|g" "${INSTALL_DIR}/workflows/personal-finance-bot.json"
+if [ "${CURRENT_DIR}" != "${INSTALL_DIR}" ]; then
+    [ -f "${CURRENT_DIR}/docker-compose.yml" ] && cp "${CURRENT_DIR}/docker-compose.yml" "${INSTALL_DIR}/"
+    [ -f "${CURRENT_DIR}/Caddyfile" ] && cp "${CURRENT_DIR}/Caddyfile" "${INSTALL_DIR}/"
+    [ -f "${CURRENT_DIR}/scripts/init-db.sql" ] && cp "${CURRENT_DIR}/scripts/init-db.sql" "${INSTALL_DIR}/scripts/"
+    [ -f "${CURRENT_DIR}/scripts/backup-n8n.sh" ] && cp "${CURRENT_DIR}/scripts/backup-n8n.sh" "${INSTALL_DIR}/scripts/"
+    [ -f "${CURRENT_DIR}/scripts/update-n8n.sh" ] && cp "${CURRENT_DIR}/scripts/update-n8n.sh" "${INSTALL_DIR}/scripts/"
+    if [ -d "${CURRENT_DIR}/workflows" ]; then
+        cp -r "${CURRENT_DIR}/workflows/"* "${INSTALL_DIR}/workflows/" || true
     fi
+fi
+
+chmod +x "${INSTALL_DIR}"/scripts/*.sh 2>/dev/null || true
+if [ -f "${INSTALL_DIR}/workflows/personal-finance-bot.json" ]; then
+    sed -i "s|YOUR_GEMINI_API_KEY|${INPUT_GEMINI_KEY}|g" "${INSTALL_DIR}/workflows/personal-finance-bot.json"
 fi
 
 # 8. Jalankan Container

@@ -27,12 +27,12 @@ fi
 # 1. Dump database PostgreSQL
 BACKUP_SQL_FILE="${BACKUP_DIR}/n8n_db_${TIMESTAMP}.sql.gz"
 echo "[INFO] Menjalankan pg_dump dari container PostgreSQL..."
-docker exec n8n_postgres pg_dump -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" | gzip > "${BACKUP_SQL_FILE}"
+docker exec -e PGPASSWORD="${POSTGRES_PASSWORD}" n8n_postgres pg_dump -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" | gzip > "${BACKUP_SQL_FILE}"
 
-# 2. Backup file .env dan encryption key
+# 2. Backup file .env, encryption key, scripts, dan workflows
 BACKUP_ENV_FILE="${BACKUP_DIR}/n8n_env_${TIMESTAMP}.tar.gz"
-echo "[INFO] Menyelamatkan file konfigurasi dan encryption key..."
-tar -czf "${BACKUP_ENV_FILE}" -C "${INSTALL_DIR}" .env Caddyfile docker-compose.yml
+echo "[INFO] Menyelamatkan file konfigurasi, scripts, dan workflows..."
+tar -czf "${BACKUP_ENV_FILE}" -C "${INSTALL_DIR}" .env Caddyfile docker-compose.yml scripts workflows
 
 # 3. Validasi hasil backup
 if [ -s "${BACKUP_SQL_FILE}" ] && [ -s "${BACKUP_ENV_FILE}" ]; then

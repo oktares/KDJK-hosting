@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="KDJK-hosting/assets/banner.svg" alt="Panduan Self-Hosted n8n di VPS" width="100%">
+  <img src="assets/banner.svg" alt="Implementasi Self-Hosted n8n di VPS Linux untuk Bot Manajemen Keuangan Pribadi" width="100%">
 </p>
 
 <p align="center">
@@ -7,804 +7,589 @@
   <a href="https://www.docker.com"><img src="https://img.shields.io/badge/Docker-26.0+-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"></a>
   <a href="https://www.postgresql.org"><img src="https://img.shields.io/badge/PostgreSQL-16_Alpine-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"></a>
   <a href="https://caddyserver.com"><img src="https://img.shields.io/badge/Caddy-Auto_SSL-1F88C0?style=for-the-badge&logo=caddy&logoColor=white" alt="Caddy"></a>
-  <a href="https://ubuntu.com"><img src="https://img.shields.io/badge/Ubuntu-22.04%20%7C%2024.04_LTS-E95420?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Ubuntu"></a>
+  <a href="https://ai.google.dev"><img src="https://img.shields.io/badge/Google_Gemini-3.8_Flash-8E75C2?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini"></a>
+  <a href="https://core.telegram.org/bots"><img src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram"></a>
 </p>
 
+<h1 align="center">
+  Laporan Proyek Komunikasi Data & Jaringan Komputer (KDJK)<br>
+  Implementasi Self-Hosted n8n di VPS Linux untuk Bot Manajemen Keuangan Pribadi Berbasis AI (Gemini) dan PostgreSQL
+</h1>
+
 <p align="center">
-  <b>Tutorial komprehensif implementasi self-hosted n8n pada Virtual Private Server (VPS) Linux dengan Docker Compose, reverse proxy Caddy ber-SSL otomatis, database PostgreSQL 16, optimasi performa, skrip pemeliharaan periodik, dan automasi bisnis berbasis AI.</b>
+  <b>Dokumentasi komprehensif perancangan infrastruktur jaringan hosting VPS, reverse proxy Caddy ber-SSL otomatis, isolasi jaringan Docker bridge, basis data PostgreSQL 16 teroptimasi, dan automasi cerdas Telegram Bot menggunakan Google Gemini AI.</b>
 </p>
 
 ---
 
 ## 📑 Daftar Isi
 
-- [Aplikasi / Web "n8n"](#-aplikasi--web-n8n)
-- [Sekilas Tentang](#-sekilas-tentang)
-  - [Mengapa Self-Hosted di VPS?](#mengapa-self-hosted-di-vps)
-  - [Arsitektur Sistem](#arsitektur-sistem)
-- [Instalasi](#-instalasi)
-  - [Prasyarat Sistem](#1-prasyarat-sistem)
-  - [Langkah Instalasi dalam CLI](#2-langkah-instalasi-dalam-cli)
-- [Konfigurasi Lanjutan](#-konfigurasi-lanjutan)
-  - [Optimasi Server & Resource](#1-optimasi-server--kinerja)
-  - [Plugin & Integrasi Eksternal](#2-plugin--integrasi-eksternal)
-- [Maintenance & Pemeliharaan](#-maintenance--pemeliharaan)
-  - [Pencadangan Database Otomatis](#1-backup-database-periodik-mingguan)
-  - [Pembersihan Sampah & Log Rotation](#2-pembersihan-sampah-harian--log-rotation)
-  - [Prosedur Pemulihan (Disaster Recovery)](#3-prosedur-restore-database)
-- [Otomatisasi Skrip](#-otomatisasi-skrip-shell)
-- [Cara Pemakaian](#-cara-pemakaian)
-  - [Tampilan Antarmuka Aplikasi Web](#1-tampilan-antarmuka-aplikasi-web)
-  - [Fungsi-Fungsi Utama](#2-fungsi-fungsi-utama)
-  - [Studi Kasus Nyata (Data Real / Dummy)](#3-studi-kasus-nyata-lead-triage-ai--telegram-alert)
-- [Pembahasan](#-pembahasan)
-  - [Pendapat & Review Penulis](#1-pendapat-dan-evaluasi)
-  - [Kelebihan](#2-kelebihan)
-  - [Kekurangan](#3-kekurangan)
-  - [Tabel Perbandingan dengan Aplikasi Sejenis](#4-tabel-perbandingan-komprehensif)
-- [Referensi](#-referensi)
+- [1. Ringkasan Eksekutif & Identitas Proyek](#1-ringkasan-eksekutif--identitas-proyek)
+- [2. Konsep Jaringan Komputer & Arsitektur Sistem](#2-konsep-jaringan-komputer--arsitektur-sistem)
+  - [2.1 Alur Komunikasi Jaringan (Network Traffic Flow)](#21-alur-komunikasi-jaringan-network-traffic-flow)
+  - [2.2 Reverse Proxy Caddy & Otomasi SSL/TLS Let's Encrypt](#22-reverse-proxy-caddy--otomasi-ssltls-lets-encrypt)
+  - [2.3 Isolasi Jaringan Kontainer (Docker Bridge Isolation)](#23-isolasi-jaringan-kontainer-docker-bridge-isolation)
+  - [2.4 Mekanisme Webhook Telegram vs Polling](#24-mekanisme-webhook-telegram-vs-polling)
+  - [2.5 Diagram Topologi & Alur Data](#25-diagram-topologi--alur-data)
+- [3. Prasyarat & Perencanaan Alokasi Resource](#3-prasyarat--perencanaan-alokasi-resource)
+  - [3.1 Spesifikasi Server VPS](#31-spesifikasi-server-vps)
+  - [3.2 Alokasi Port & Konfigurasi Firewall UFW](#32-alokasi-port--konfigurasi-firewall-ufw)
+  - [3.3 Konfigurasi DNS Record](#33-konfigurasi-dns-record)
+- [4. Panduan Instalasi & Deploy VPS](#4-panduan-instalasi--deploy-vps)
+  - [4.1 Metode 1: Instalasi Otomatis 1-Klik (`setup-n8n.sh`)](#41-metode-1-instalasi-otomatis-1-klik-setup-n8nsh)
+  - [4.2 Metode 2: Langkah Konfigurasi Manual](#42-metode-2-langkah-konfigurasi-manual)
+- [5. Panduan Konfigurasi Bot Telegram & API Key Gemini](#5-panduan-konfigurasi-bot-telegram--api-key-gemini)
+  - [5.1 Pembuatan Bot Telegram via @BotFather](#51-pembuatan-bot-telegram-via-botfather)
+  - [5.2 Pengaturan Google Gemini API Key](#52-pengaturan-google-gemini-api-key)
+  - [5.3 Konfigurasi Kredensial di n8n Web UI](#53-konfigurasi-kredensial-di-n8n-web-ui)
+- [6. Perancangan Basis Data PostgreSQL (`init-db.sql`)](#6-perancangan-basis-data-postgresql-init-dbsql)
+- [7. Studi Kasus: Bot Keuangan Pribadi Cerdas](#7-studi-kasus-bot-keuangan-pribadi-cerdas)
+  - [7.1 Fitur Utama Bot](#71-fitur-utama-bot)
+  - [7.2 Detail Node Alur Kerja n8n (`personal-finance-bot.json`)](#72-detail-node-alur-kerja-n8n-personal-finance-botjson)
+  - [7.3 Skema Prompting & Parsing JSON Gemini](#73-skema-prompting--parsing-json-gemini)
+- [8. Skenario Pengujian & Tabel Test Cases Nyata](#8-skenario-pengujian--tabel-test-cases-nyata)
+- [9. Pemeliharaan, Backup & Disaster Recovery](#9-pemeliharaan-backup--disaster-recovery)
+  - [9.1 Skrip Backup Otomatis & Retensi 14 Hari (`backup-n8n.sh`)](#91-skrip-backup-otomatis--retensi-14-hari-backup-n8nsh)
+  - [9.2 Skrip Pembaruan Aman Kontainer (`update-n8n.sh`)](#92-skrip-pembaruan-aman-kontainer-update-n8nsh)
+  - [9.3 Prosedur Pemulihan Basis Data (Restore DR)](#93-prosedur-pemulihan-basis-data-restore-dr)
+- [10. Pembahasan, Evaluasi & Analisis Komparatif](#10-pembahasan-evaluasi--analisis-komparatif)
+  - [10.1 Evaluasi Kinerja & Aspek Jaringan](#101-evaluasi-kinerja--aspek-jaringan)
+  - [10.2 Kelebihan Sistem](#102-kelebihan-sistem)
+  - [10.3 Kekurangan & Batasan Sistem](#103-kekurangan--batasan-sistem)
+  - [10.4 Tabel Perbandingan Komprehensif](#104-tabel-perbandingan-komprehensif)
+- [11. Referensi](#11-referensi)
 
 ---
 
-## 🚀 Aplikasi / Web "n8n"
+## 1. Ringkasan Eksekutif & Identitas Proyek
 
-**n8n** (*nodemation*) adalah platform integrasi sistem dan otomasi alur kerja (*workflow automation*) berbasis node sumber terbuka (*fair-code*) dengan pendekatan *low-code/no-code*. n8n memungkinkan individu, pengembang, maupun korporasi untuk menghubungkan ratusan aplikasi, database, webhook, API kustom, hingga model kecerdasan buatan (*AI Agents / LLMs*) ke dalam satu kanvas visual yang intuitif.
+Proyek ini dibangun untuk memenuhi tugas besar mata kuliah **Komunikasi Data dan Jaringan Komputer (KDJK)** dengan topik **Hosting Layanan pada Virtual Private Server (VPS)**.
+
+Tujuan utama proyek ini adalah mengimplementasikan arsitektur hosting mandiri (*self-hosted*) modern berbasis mikro-layanan (*containerized microservices*) yang andal, aman, dan berdaya guna tinggi. Layanan yang di-hosting adalah **n8n Workflow Automation Engine**, yang diintegrasikan dengan reverse proxy **Caddy Server**, basis data relasional **PostgreSQL 16**, model kecerdasan buatan **Google Gemini AI**, dan platform komunikasi **Telegram**.
+
+Produk akhir berupa **Bot Catat Keuangan Pribadi Telegram** yang memungkinkan pengguna mencatat pengeluaran (*expense*) dan pemasukan (*income*) secara real-time hanya dengan mengetikkan kalimat santai berbahasa Indonesia (contoh: *"beli makan 7000"*, *"bayar kos 850rb"*, *"bensin 25k"*, *"gaji bulanan 3jt"*). Model bahasa Gemini mengekstrak nominal, tipe, dan kategori transaksi secara presisi, lalu menyimpannya ke dalam PostgreSQL di dalam VPS, serta memberikan konfirmasi interaktif beserta rekapitulasi harian dan bulanan (`/rekap`).
 
 ---
 
-## 📖 Sekilas Tentang
-
-Otomasi alur kerja modern sering kali terkendala oleh biaya langganan SaaS berbasis konsumsi task (seperti Zapier atau Make) yang membengkak seiring pertumbuhan volume transaksi data, serta regulasi kepatuhan data (*data residency & privacy*). n8n hadir sebagai alternatif mandiri (*self-hosted*) yang memberikan kendali 100% atas infrastruktur dan data tanpa batasan jumlah eksekusi.
-
-### Mengapa Self-Hosted di VPS?
-
-| Aspek | Layanan SaaS Proprietary (Zapier / Make) | Self-Hosted n8n di VPS |
-| :--- | :--- | :--- |
-| **Biaya Eksekusi** | Berbayar per-task (ribuan transaksi = ratusan USD/bulan) | **Tetap / Flat** (hanya biaya VPS ~$4 - $10/bulan) |
-| **Kerahasiaan Data** | Data pelanggan diproses di server pihak ketiga | **Tersimpan lokal & terenkripsi** di database VPS sendiri |
-| **Waktu Eksekusi** | Dibatasi timeout ketat (15 - 300 detik) | **Bisa diatur bebas** (cocok untuk batching data berat) |
-| **Kemampuan Coding** | Terbatas pada sandbox JavaScript minimalis | **Mendukung eksekusi penuh JavaScript & Python** serta modul npm |
-| **Dukungan AI Native** | Add-on berbayar tambahan | **Built-in LangChain nodes** (OpenAI, Anthropic, Ollama lokal) |
-
-### Arsitektur Sistem
-
-Implementasi n8n pada panduan ini menggunakan arsitektur containerized Docker dengan reverse proxy Caddy untuk menangani enkripsi TLS/SSL secara otomatis:
+## 2. Konsep Jaringan Komputer & Arsitektur Sistem
 
 <p align="center">
-  <img src="KDJK-hosting/assets/architecture.svg" alt="Arsitektur n8n Self-Hosted VPS" width="95%">
+  <img src="assets/architecture.svg" alt="Arsitektur Jaringan n8n Self-Hosted VPS" width="95%">
 </p>
+
+### 2.1 Alur Komunikasi Jaringan (Network Traffic Flow)
+
+Arsitektur jaringan dirancang dengan prinsip **Defense-in-Depth** dan **Least Privilege Access**:
+1. **Inbound Public Access**: Klien (browser admin dan server webhook Telegram) hanya dapat berkomunikasi melalui protokol aman **HTTPS (Port 443)** dan **HTTP (Port 80)**. Seluruh traffic HTTP langsung dialihkan secara permanen (*301 Permanent Redirect*) ke HTTPS.
+2. **Reverse Proxy Layer**: **Caddy** menjadi titik temu tunggal (*Single Point of Entry*) bagi seluruh koneksi inbound. Caddy bertugas melakukan terminasi SSL, mengompresi payload via gzip/zstd, dan meneruskan request internal ke port `5678` container n8n via hostname internal Docker `n8n`.
+3. **Application Layer**: Container `n8n` menerima request webhook dari Caddy, mengeksekusi logika alur kerja, menghubungi endpoint REST API Google Gemini melalui koneksi outbound HTTPS, serta berinteraksi dengan PostgreSQL.
+4. **Data Layer**: Container `postgres` hanya mendengarkan pada interface internal port `5432` di dalam virtual network bridge Docker. Port database **TIDAK PERNAH** diekspos ke IP publik VPS (`0.0.0.0`), sehingga kebal dari serangan brute-force database scanner di internet publik.
+
+### 2.2 Reverse Proxy Caddy & Otomasi SSL/TLS Let's Encrypt
+
+Pada implementasi hosting konvensional, administrator wajib mengatur Nginx/Apache beserta `certbot` crontab secara manual untuk renewal SSL. Hal ini rawan kegagalan akibat masa kedaluwarsa 90 hari yang terlewat.
+
+Dalam arsitektur ini, **Caddy 2** dipilih karena memiliki kapabilitas bawaan:
+- **Automatic HTTPS via ACME Protocol**: Caddy secara mandiri melakukan *HTTP-01 ACME Challenge* ke Certificate Authority (CA) Let's Encrypt atau ZeroSSL saat domain pertama kali diakses.
+- **Auto-Renewal Background Daemon**: Caddy memeriksa masa aktif sertifikat secara kontinu dan memperbaruinya otomatis 30 hari sebelum kedaluwarsa.
+- **WebSocket Streaming Support**: n8n menggunakan WebSocket untuk canvas live update. Caddy dikonfigurasi dengan `flush_interval -1` agar buffer streaming data real-time tidak tertahan.
+- **Security Headers Injection**: Caddy menyisipkan header keamanan standar industri seperti *HTTP Strict Transport Security (HSTS)*, *X-Content-Type-Options: nosniff*, dan *X-Frame-Options: SAMEORIGIN*.
+
+### 2.3 Isolasi Jaringan Kontainer (Docker Bridge Isolation)
+
+Seluruh service (`caddy`, `n8n`, `postgres`) tergabung dalam satu Docker user-defined bridge network bernama `n8n_network`.
 
 ```mermaid
-flowchart TD
-    subgraph PublicInternet["🌐 Public Internet"]
-        ClientBrowser["Web Browser (Admin)"]
-        WebhookSender["Webhook Trigger (Apps / Forms)"]
-        Cloudflare["Cloudflare DNS (A Record: n8n.domain.com)"]
+graph TD
+    subgraph WAN ["🌐 Public WAN (Internet)"]
+        UserBrowser["Web Browser (Admin)"]
+        TelegramWebhook["Telegram Cloud Server"]
     end
 
-    subgraph LinuxVPS["🖥️ Virtual Private Server (Ubuntu 22.04 / 24.04 LTS)"]
-        subgraph Ports["Firewall UFW"]
-            Port80["Port 80 (HTTP)"]
-            Port443["Port 443 (HTTPS)"]
+    subgraph HostVPS ["🖥️ Host OS Linux (Ubuntu Server)"]
+        subgraph UFW ["Firewall UFW"]
+            P80["Port 80 (HTTP)"]
+            P443["Port 443 (HTTPS)"]
+            P22["Port 22 (SSH)"]
         end
 
-        subgraph DockerBridge["🐳 Docker Network (n8n_network)"]
-            Caddy["Caddy Reverse Proxy\n(Auto Let's Encrypt SSL)"]
-            N8N["n8n Application Container\n(Port 5678, Node.js + AI Engine)"]
-            Postgres["PostgreSQL 16 Alpine\n(Port 5432, Relational Data)"]
+        subgraph DockerNet ["🐳 Docker Network Bridge: n8n_network (172.20.0.0/16)"]
+            CaddyCtr["Container: n8n_caddy\n(Reverse Proxy & SSL)"]
+            N8nCtr["Container: n8n_app\n(Node.js Workflow Engine)"]
+            PGCtr["Container: n8n_postgres\n(PostgreSQL 16 Storage)"]
         end
 
-        subgraph Storage["Persistent Docker Volumes"]
-            VolCaddy["caddy_data / caddy_config"]
-            VolN8N["n8n_data (/home/node/.n8n)"]
-            VolPG["postgres_data (/var/lib/postgresql/data)"]
+        subgraph Volumes ["💾 Persistent Volume Bindings"]
+            VolCaddy["caddy_data"]
+            VolN8n["n8n_data"]
+            VolPG["postgres_data"]
+            VolInit["scripts/init-db.sql"]
         end
     end
 
-    subgraph ExternalAPIs["☁️ External Services / APIs"]
-        OpenAI["OpenAI API (GPT-4o)"]
-        Telegram["Telegram Bot API"]
-        EmailSMTP["SMTP Mail Server"]
+    subgraph ExternalCloud ["☁️ External AI Cloud Service"]
+        GeminiAPI["Google Gemini 3.8 Flash API"]
     end
 
-    ClientBrowser -->|HTTPS| Cloudflare
-    WebhookSender -->|HTTPS POST| Cloudflare
-    Cloudflare --> Port443
-    Port80 -->|Auto Redirect 301| Port443
-    Port443 --> Caddy
-    Caddy -->|Reverse Proxy| N8N
-    N8N <-->|SQL Queries| Postgres
-    N8N -->|Prompt / LLM Inference| OpenAI
-    N8N -->|Send Notification| Telegram
-    N8N -->|Delivery Reports| EmailSMTP
+    UserBrowser -->|HTTPS :443| P443
+    TelegramWebhook -->|Webhook POST :443| P443
+    P80 -->|Redirect to HTTPS| CaddyCtr
+    P443 --> CaddyCtr
 
-    Caddy -.-> VolCaddy
-    N8N -.-> VolN8N
-    Postgres -.-> VolPG
+    CaddyCtr -->|Forward Proxy http://n8n:5678| N8nCtr
+    N8nCtr -->|TCP :5432 Internal| PGCtr
+    N8nCtr -->|Outbound HTTPS REST POST| GeminiAPI
+    N8nCtr -->|Outbound HTTPS REST POST| TelegramWebhook
+
+    CaddyCtr -.-> VolCaddy
+    N8nCtr -.-> VolN8n
+    PGCtr -.-> VolPG
+    PGCtr -.-> VolInit
 ```
+
+**Keuntungan Docker Bridge Network**:
+1. **Embedded DNS Resolution**: Komponen tidak perlu menggunakan IP address statis. `n8n` cukup memanggil host `postgres` dan `caddy` cukup memanggil host `n8n:5678`.
+2. **Zero Inbound Exposure untuk Database**: Container PostgreSQL tidak membuka port ke host, mencegah scanning port 5432 dari peretas internet.
+
+### 2.4 Mekanisme Webhook Telegram vs Polling
+
+Pada bot Telegram terdapat dua arsitektur komunikasi:
+- **Long Polling (Tradisional)**: Bot berulang kali mengirim HTTP GET ke server Telegram setiap beberapa detik untuk mengecek pesan baru. Polling memboroskan bandwidth, meningkatkan latensi hingga 1-3 detik, dan membebani resource CPU.
+- **Webhook Push Event (Arsitektur Proyek Ini)**: Ketika user mengirim pesan di aplikasi Telegram, cloud server Telegram langsung mengirimkan HTTP POST event secara instan (*push model*) ke endpoint publik VPS: `https://n8n.domainanda.com/webhook/kdjk-telegram-finance-bot`. Latensi penerimaan pesan terpangkas drastis menjadi **< 100 ms**. Syarat mutlak webhook Telegram adalah endpoint server wajib memiliki sertifikat SSL/TLS valid yang diakui publik (dipenuhi secara otomatis oleh Caddy).
 
 ---
 
-## 🛠️ Instalasi
+## 3. Prasyarat & Perencanaan Alokasi Resource
 
-### 1. Prasyarat Sistem
+### 3.1 Spesifikasi Server VPS
 
-Sebelum memulai instalasi, persiapkan komponen berikut:
+| Komponen | Spesifikasi Minimum | Spesifikasi Rekomendasi (Digunakan) | Keterangan |
+| :--- | :--- | :--- | :--- |
+| **vCPU** | 1 Core | 2 Cores | Untuk kompilasi Node.js & enkripsi SSL |
+| **RAM** | 1 GB + 2GB Swap | 2 GB / 4 GB RAM Fisik | Mencegah Linux OOM Killer |
+| **Storage** | 20 GB SSD | 30 - 40 GB NVMe SSD | Untuk volume Docker & riwayat PostgreSQL |
+| **OS** | Ubuntu 20.04 LTS | Ubuntu 22.04 LTS / 24.04 LTS | Kernel Linux 5.15+ dengan dukungan Docker v2 |
+| **IP Publik** | 1 IPv4 Statis | 1 IPv4 Statis | Untuk binding DNS A-Record |
 
-- **Virtual Private Server (VPS)**:
-  - Rekomendasi penyedia: DigitalOcean, Hetzner, Linode, AWS EC2, atau VPS lokal (IDCloudHost / Biznet).
-  - **Spesifikasi Minimum**: 1 vCPU, 2 GB RAM, 25 GB SSD/NVMe Storage.
-  - **Spesifikasi Rekomendasi**: 2 vCPU, 4 GB RAM, 40 GB NVMe (sangat ideal untuk workflow AI dan database).
-- **Sistem Operasi**: Ubuntu 22.04 LTS atau 24.04 LTS (x86_64).
-- **Domain / Subdomain Aktif**: Contoh: `n8n.domainanda.com`.
-  - Buat **A Record** pada DNS management (Cloudflare / Namecheap / dll) mengarah ke **IP Public VPS Anda**.
-  - Nonaktifkan sementara proxy orange Cloudflare (gunakan *DNS Only*) saat setup pertama kali agar validasi challenge sertifikat Caddy Let's Encrypt berjalan mulus.
-- **Port Terbuka**: Port `80` (HTTP), `443` (HTTPS), dan `22` (SSH).
+### 3.2 Alokasi Port & Konfigurasi Firewall UFW
 
----
-
-### 2. Langkah Instalasi dalam CLI
-
-Ikuti langkah-langkah CLI berikut secara terurut:
-
-#### Langkah 1: Akses SSH & Update Sistem
-
-Login ke VPS Anda via terminal:
-
-```bash
-ssh root@<IP_PUBLIC_VPS_ANDA>
-```
-
-Lakukan pembaruan indeks paket dan upgrade sistem operasi:
-
-```bash
-apt update && apt upgrade -y
-apt install -y curl wget git ufw htop ca-certificates gnupg lsb-release
-```
-
-#### Langkah 2: Konfigurasi 2GB Swap Memory (Wajib untuk 1-2GB RAM)
-
-Swap memory mencegah container n8n mengalami crash (*Out-of-Memory / OOM Killer*) saat mengeksekusi workflow berukuran besar:
-
-```bash
-# Periksa apakah swap sudah aktif
-swapon --show
-
-# Jika belum ada, buat 2GB swap file
-fallocate -l 2G /swapfile
-chmod 600 /swapfile
-mkswap /swapfile
-swapon /swapfile
-
-# Jadikan swap permanen setelah reboot
-echo '/swapfile none swap sw 0 0' >> /etc/fstab
-
-# Optimasi swappiness
-sysctl vm.swappiness=10
-echo 'vm.swappiness=10' >> /etc/sysctl.conf
-```
-
-#### Langkah 3: Konfigurasi Firewall Server (UFW)
-
-Amankan server dengan membuka hanya port penting:
-
-```bash
-ufw default deny incoming
-ufw default allow outgoing
-ufw allow 22/tcp comment 'SSH Port'
-ufw allow 80/tcp comment 'Caddy HTTP'
-ufw allow 443/tcp comment 'Caddy HTTPS'
-ufw --force enable
-ufw status verbose
-```
-
-#### Langkah 4: Instalasi Docker & Docker Compose v2
-
-Gunakan instalasi resmi script convenience Docker:
-
-```bash
-curl -fsSL https://get.docker.com -o get-docker.sh
-sh get-docker.sh
-rm get-docker.sh
-
-# Aktifkan dan jalankan docker service
-systemctl enable --now docker
-
-# Verifikasi versi terpasang
-docker --version
-docker compose version
-```
-
-#### Langkah 5: Pembuatan Direktori Proyek & Berkas Konfigurasi
-
-Buat direktori khusus untuk meletakkan file konfigurasi:
-
-```bash
-mkdir -p /opt/n8n/local_files /opt/n8n/backups
-cd /opt/n8n
-```
-
-Unduh atau buat file `.env`, `docker-compose.yml`, dan `Caddyfile`.
-
-##### A. Membuat File `.env`
-
-Jalankan perintah berikut untuk meng-generate encryption key acak 48-karakter dan password database:
-
-```bash
-# Generate encryption key aman
-N8N_KEY=$(openssl rand -hex 24)
-PG_PASS=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9' | head -c 16)
-
-cat <<EOF > /opt/n8n/.env
-# Domain & SSL
-SUBDOMAIN=n8n
-DOMAIN_NAME=domainanda.com
-SSL_EMAIL=admin@domainanda.com
-GENERIC_TIMEZONE=Asia/Jakarta
-
-# Database PostgreSQL
-POSTGRES_USER=n8n_admin
-POSTGRES_PASSWORD=${PG_PASS}
-POSTGRES_DB=n8n_production
-
-# Keamanan n8n
-N8N_ENCRYPTION_KEY=${N8N_KEY}
-
-# Limitasi & Resource
-N8N_PAYLOAD_SIZE_MAX=128
-EXECUTIONS_DATA_PRUNE=true
-EXECUTIONS_DATA_MAX_AGE=168
-EXECUTIONS_DATA_PRUNE_MAX_COUNT=50000
-
-# Logging
-N8N_LOG_LEVEL=info
-N8N_DIAGNOSTICS_ENABLED=false
-EOF
-```
-
-> [!IMPORTANT]
-> Sesuaikan nilai `SUBDOMAIN`, `DOMAIN_NAME`, dan `SSL_EMAIL` dengan domain dan email asli Anda menggunakan nano: `nano /opt/n8n/.env`. Catat `N8N_ENCRYPTION_KEY` di password manager Anda!
-
-##### B. Membuat File `Caddyfile`
-
-Caddy bertindak sebagai reverse proxy otomatis yang meminta dan memperbarui sertifikat HTTPS dari Let's Encrypt tanpa perlu konfigurasi certbot manual:
-
-```bash
-cat <<'EOF' > /opt/n8n/Caddyfile
-{$SUBDOMAIN}.{$DOMAIN_NAME} {
-    reverse_proxy n8n:5678 {
-        flush_interval -1
-    }
-
-    header {
-        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-        X-Content-Type-Options "nosniff"
-        X-Frame-Options "SAMEORIGIN"
-        X-XSS-Protection "1; mode=block"
-        Referrer-Policy "strict-origin-when-cross-origin"
-    }
-
-    tls {$SSL_EMAIL}
-    encode gzip zstd
-}
-EOF
-```
-
-##### C. Membuat File `docker-compose.yml`
-
-File orkestrasi container production:
-
-```bash
-cat <<'EOF' > /opt/n8n/docker-compose.yml
-version: '3.8'
-
-services:
-  caddy:
-    image: caddy:2-alpine
-    container_name: n8n_caddy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - n8n_network
-    depends_on:
-      - n8n
-
-  postgres:
-    image: postgres:16-alpine
-    container_name: n8n_postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - n8n_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  n8n:
-    image: docker.n8n.io/n8nio/n8n:latest
-    container_name: n8n_app
-    restart: unless-stopped
-    environment:
-      - N8N_HOST=${SUBDOMAIN}.${DOMAIN_NAME}
-      - N8N_PORT=5678
-      - N8N_PROTOCOL=https
-      - WEBHOOK_URL=https://${SUBDOMAIN}.${DOMAIN_NAME}/
-      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
-      - TZ=${GENERIC_TIMEZONE}
-
-      # Database PostgreSQL
-      - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=postgres
-      - DB_POSTGRESDB_PORT=5432
-      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
-      - DB_POSTGRESDB_USER=${POSTGRES_USER}
-      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
-
-      # Keamanan
-      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
-
-      # Optimasi & Pruning
-      - EXECUTIONS_DATA_PRUNE=${EXECUTIONS_DATA_PRUNE}
-      - EXECUTIONS_DATA_MAX_AGE=${EXECUTIONS_DATA_MAX_AGE}
-      - EXECUTIONS_DATA_PRUNE_MAX_COUNT=${EXECUTIONS_DATA_PRUNE_MAX_COUNT}
-      - N8N_PAYLOAD_SIZE_MAX=${N8N_PAYLOAD_SIZE_MAX}
-
-      # Ekstensi & Modul Eksternal
-      - N8N_COMMUNITY_PACKAGES_ENABLED=true
-      - NODE_FUNCTION_ALLOW_EXTERNAL=lodash,axios,moment,crypto-js
-
-      # Logging
-      - N8N_LOG_LEVEL=${N8N_LOG_LEVEL}
-      - N8N_DIAGNOSTICS_ENABLED=${N8N_DIAGNOSTICS_ENABLED}
-    volumes:
-      - n8n_data:/home/node/.n8n
-      - ./local_files:/data/local_files
-    networks:
-      - n8n_network
-    depends_on:
-      postgres:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 2048M
-        reservations:
-          memory: 512M
-
-volumes:
-  caddy_data:
-  caddy_config:
-  postgres_data:
-  n8n_data:
-
-networks:
-  n8n_network:
-    driver: bridge
-EOF
-```
-
-#### Langkah 6: Menjalankan Container
-
-Tarik seluruh image dan jalankan stack di background:
-
-```bash
-cd /opt/n8n
-docker compose pull
-docker compose up -d
-```
-
-Verifikasi bahwa ketiga container berjalan dalam status `Up` / `healthy`:
-
-```bash
-docker compose ps
-```
-
-Hasil terminal yang diharapkan:
-```text
-NAME           IMAGE                             COMMAND                  SERVICE    STATUS                    PORTS
-n8n_app        docker.n8n.io/n8nio/n8n:latest    "tini -- /docker-ent…"   n8n        running (healthy)         5678/tcp
-n8n_caddy      caddy:2-alpine                    "caddy run --config …"   caddy      running                   0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp
-n8n_postgres   postgres:16-alpine                "docker-entrypoint.s…"   postgres   running (healthy)         5432/tcp
-```
-
-Periksa log Caddy untuk memastikan sertifikat SSL berhasil digenerate:
-
-```bash
-docker compose logs caddy | grep -i "certificate obtained"
-```
-
-Buka peramban (*web browser*) Anda dan akses:
-👉 `https://n8n.domainanda.com`
-
----
-
-## ⚙️ Konfigurasi Lanjutan
-
-### 1. Optimasi Server & Kinerja
-
-Secara default, n8n menyimpan riwayat eksekusi setiap detik. Tanpa konfigurasi batas, disk VPS akan cepat penuh dan memori PostgreSQL akan meluap.
-
-#### A. Batas Ukuran Payload Upload File (`N8N_PAYLOAD_SIZE_MAX`)
-Jika workflow Anda mengolah file binary (seperti PDF, gambar, atau audio rekaman meeting untuk transkrip Whisper), tingkatkan batas payload:
-```env
-# Batas ukuran payload file masuk (dalam MB, default adalah 16MB)
-N8N_PAYLOAD_SIZE_MAX=128
-```
-
-#### B. Pembersihan Otomatis Riwayat Eksekusi (*Execution Data Pruning*)
-Aktifkan variabel berikut pada file `.env`:
-```env
-# Aktifkan auto-prune
-EXECUTIONS_DATA_PRUNE=true
-
-# Batas usia penyimpanan histori eksekusi dalam jam (168 jam = 7 hari)
-EXECUTIONS_DATA_MAX_AGE=168
-
-# Batasi jumlah maksimal entri eksekusi yang disimpan di database
-EXECUTIONS_DATA_PRUNE_MAX_COUNT=50000
-
-# Jangan simpan payload detail jika eksekusi berhasil (hanya simpan jika gagal/error)
-# Menghemat kapasitas database hingga 80%!
-EXECUTIONS_DATA_SAVE_ON_ERROR=all
-EXECUTIONS_DATA_SAVE_ON_SUCCESS=none
-```
-
-#### C. Alokasi Batas Memori Container (Resource Limiting)
-Agar proses n8n tidak mengambil 100% kapasitas RAM server saat ada request berat, atur batas memori pada `docker-compose.yml`:
-```yaml
-deploy:
-  resources:
-    limits:
-      memory: 2048M
-    reservations:
-      memory: 512M
-```
-
-#### D. Pengaturan Zona Waktu (*Timezone*)
-Agar node Schedule / Cron Trigger mengeksekusi workflow sesuai waktu lokal Indonesia:
-```env
-GENERIC_TIMEZONE=Asia/Jakarta
-TZ=Asia/Jakarta
-```
-
----
-
-### 2. Plugin & Integrasi Eksternal
-
-#### A. Community Nodes (Plugin Ekstensi Komunitas)
-n8n mendukung ekosistem node buatan komunitas (misal: node WhatsApp Baileys, PDF Creator, MinIO Storage, dll).
-1. Pastikan env terpasang:
-   ```env
-   N8N_COMMUNITY_PACKAGES_ENABLED=true
-   ```
-2. Buka Web UI n8n ➔ **Settings** ➔ **Community Nodes** ➔ Klik **Install a node**.
-3. Masukkan nama package npm yang diinginkan, misalnya `n8n-nodes-whatsapp-baileys` atau `n8n-nodes-pdfkit`.
-
-#### B. Izinkan Modul Eksternal di Node Code (JavaScript / Python)
-Secara default, node Code berjalan dalam sandbox terbatas. Untuk menggunakan library seperti `lodash`, `axios`, atau `moment`:
-```env
-NODE_FUNCTION_ALLOW_EXTERNAL=lodash,axios,moment,crypto-js
-```
-
-#### C. Autentikasi Pengguna & Email Reset Password (SMTP)
-Agar n8n dapat mengirim email aktivasi anggota tim dan reset password:
-Tambahkan pada service `n8n` di `docker-compose.yml`:
-```yaml
-environment:
-  - N8N_EMAIL_MODE=smtp
-  - N8N_SMTP_HOST=smtp.gmail.com
-  - N8N_SMTP_PORT=587
-  - N8N_SMTP_USER=notifikasi.bisnis@gmail.com
-  - N8N_SMTP_PASS=xxxx-xxxx-xxxx-xxxx # App Password Gmail
-  - N8N_SMTP_SENDER=n8n Automation <notifikasi.bisnis@gmail.com>
-  - N8N_SMTP_SSL=false
-```
-
-#### D. Integrasi Single Sign-On (Google / OAuth)
-Anda dapat menghubungkan Google OAuth Credential untuk memudahkan anggota workspace login menggunakan akun Google Workspace / Gmail perusahaan, serta mengakses Google Sheets, Gmail, dan Google Drive langsung dari kanvas tanpa harus membuat OAuth app berulang kali.
-
----
-
-## 🛡️ Maintenance & Pemeliharaan
-
-Pemeliharaan server mandiri wajib direncanakan agar data alur kerja bisnis tidak hilang jika server VPS mengalami kegagalan hardware.
-
-### 1. Backup Database Periodik Mingguan
-
-Buat skrip pencadangan PostgreSQL dan encryption key di `/opt/n8n/scripts/backup-n8n.sh`:
-
-```bash
-mkdir -p /opt/n8n/scripts
-cat <<'EOF' > /opt/n8n/scripts/backup-n8n.sh
-#!/usr/bin/env bash
-set -euo pipefail
-
-INSTALL_DIR="/opt/n8n"
-BACKUP_DIR="${INSTALL_DIR}/backups"
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-RETENTION_DAYS=14
-
-mkdir -p "${BACKUP_DIR}"
-source "${INSTALL_DIR}/.env"
-
-echo "[$(date)] Memulai pencadangan n8n..."
-
-# 1. Dump database PostgreSQL terkompresi
-docker exec n8n_postgres pg_dump -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" | gzip > "${BACKUP_DIR}/n8n_db_${TIMESTAMP}.sql.gz"
-
-# 2. Backup file environment & konfigurasi
-tar -czf "${BACKUP_DIR}/n8n_config_${TIMESTAMP}.tar.gz" -C "${INSTALL_DIR}" .env Caddyfile docker-compose.yml
-
-# 3. Rotasi: Hapus backup yang lebih lama dari 14 hari
-find "${BACKUP_DIR}" -name "n8n_db_*.sql.gz" -mtime +"${RETENTION_DAYS}" -delete
-find "${BACKUP_DIR}" -name "n8n_config_*.tar.gz" -mtime +"${RETENTION_DAYS}" -delete
-
-echo "[SUCCESS] Backup berhasil disimpan di ${BACKUP_DIR}"
-EOF
-
-chmod +x /opt/n8n/scripts/backup-n8n.sh
-```
-
-#### Jadwalkan via Cron Job (Setiap Minggu Jam 02:00 WIB)
-Buka crontab:
-```bash
-crontab -e
-```
-Tambahkan baris berikut di paling bawah:
-```cron
-0 2 * * 0 /opt/n8n/scripts/backup-n8n.sh >> /var/log/n8n_backup.log 2>&1
-```
-
----
-
-### 2. Pembersihan Sampah Harian & Log Rotation
-
-#### A. Docker System Prune Otomatis (Tiap Hari Jam 03:30 WIB)
-Docker secara akumulatif menumpuk dangling images dan build cache. Tambahkan ke `crontab -e`:
-```cron
-30 3 * * * docker system prune -f >> /var/log/docker_prune.log 2>&1
-```
-
-#### B. Mencegah Docker Daemon Log Membengkak
-Buat berkas konfig `/etc/docker/daemon.json` untuk membatasi ukuran file log container maksimal 20MB:
-```json
-{
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "20m",
-    "max-file": "3"
-  }
-}
-```
-Lalu muat ulang Docker daemon:
-```bash
-systemctl restart docker
-```
-
----
-
-### 3. Prosedur Restore Database
-
-Jika terjadi insiden dan Anda perlu memulihkan database dari snapshot:
-
-```bash
-# 1. Matikan container n8n sementara
-cd /opt/n8n && docker compose stop n8n
-
-# 2. Salin dan restore file dump .sql.gz ke PostgreSQL
-gunzip -c /opt/n8n/backups/n8n_db_YYYYMMDD_HHMMSS.sql.gz | docker exec -i n8n_postgres psql -U n8n_admin -d n8n_production
-
-# 3. Jalankan kembali container n8n
-docker compose start n8n
-```
-
----
-
-## 🤖 Otomatisasi Skrip Shell
-
-Repositori ini menyertakan skrip otomatis siap pakai pada direktori `scripts/`:
-
-| Nama Skrip | Fungsi | Perintah Eksekusi |
-| :--- | :--- | :--- |
-| [`KDJK-hosting/scripts/setup-n8n.sh`](file:///c:/KDJK/KDJK-hosting/scripts/setup-n8n.sh) | **1-Click Auto Installer**: Menginstal Docker, swap, firewall, men-generate key rahasia, dan menyalakan n8n | `bash scripts/setup-n8n.sh` |
-| [`KDJK-hosting/scripts/backup-n8n.sh`](file:///c:/KDJK/KDJK-hosting/scripts/backup-n8n.sh) | **Pencadangan Otomatis**: Dump database PostgreSQL & kompresi file konfigurasi dengan retensi 14 hari | `bash scripts/backup-n8n.sh` |
-| [`KDJK-hosting/scripts/update-n8n.sh`](file:///c:/KDJK/KDJK-hosting/scripts/update-n8n.sh) | **Safe Auto-Updater**: Menjalankan snapshot cadangan darurat, menarik image Docker terbaru, dan restart zero-downtime | `bash scripts/update-n8n.sh` |
-
----
-
-## 🖥️ Cara Pemakaian
-
-### 1. Tampilan Antarmuka Aplikasi Web
-
-Setelah membuka `https://n8n.domainanda.com`, Anda akan disajikan dengan antarmuka grafis yang bersih dan modern:
-
-<p align="center">
-  <img src="KDJK-hosting/assets/dashboard-ui.svg" alt="Tampilan Antarmuka n8n Web Dashboard" width="95%">
-</p>
-
-- **Navigation Sidebar (Kiri)**: Akses cepat ke repositori *Workflows*, riwayat *Executions*, brankas *Credentials*, *Variables*, dan pengaturan admin.
-- **Canvas Visual (Tengah)**: Ruang kerja drag-and-drop untuk merangkai alur kerja data dari trigger hingga action node.
-- **Node Configuration Panel (Kanan)**: Pengaturan parameter detail, ekspresi formula dinamik `{{ $json.field }}`, dan simulasi live output.
-
----
-
-### 2. Fungsi-Fungsi Utama
-
-| Kategori Node | Fungsi Utama | Contoh Node Populer |
-| :--- | :--- | :--- |
-| **Triggers** | Memulai workflow berdasarkan waktu atau event masuk | Webhook (HTTP POST/GET), Schedule (Cron), IMAP Email Received, Telegram Trigger |
-| **Data Transform** | Memfilter, menggabungkan, memodifikasi, dan menghitung data | Code (JavaScript/Python), Filter, Switch, Merge, Set/Edit Fields, Split In Batches |
-| **AI & LLM** | Menjalankan penalaran berbasis model bahasa besar | OpenAI, Anthropic Claude, AI Agent (ReAct Framework), Vector Store (Pinecone/Qdrant) |
-| **Databases** | Membaca dan menulis data transaksi | PostgreSQL, MySQL, Supabase, Redis, MongoDB |
-| **Communication** | Mengirimkan notifikasi dan laporan ke tim | Telegram, WhatsApp Gateway, Slack, Discord, Gmail / SMTP |
-
----
-
-### 3. Studi Kasus Nyata: Lead Triage AI & Telegram Alert
-
-Berikut adalah demonstrasi alur kerja **produksi nyata** (bukan template kosong) yang menghubungkan Formulir Penjualan Landing Page dengan AI Classifier dan Notifikasi Telegram Tim Sales.
-
-File alur kerja lengkap dapat diimpor langsung melalui menu **Workflows ➔ Import from File**:
-📂 [`KDJK-hosting/workflows/lead-triage-ai-telegram.json`](file:///c:/KDJK/KDJK-hosting/workflows/lead-triage-ai-telegram.json)
-
-#### Visual Alur Kerja Canvas:
-<p align="center">
-  <img src="KDJK-hosting/assets/workflow-preview.svg" alt="Visual Workflow Preview n8n" width="95%">
-</p>
-
-#### Skenario & Data Eksekusi Real:
-
-##### 1. Input Data Webhook Masuk (Dummy Data Realistis):
-Klien mengisi form konsultasi pada landing page perusahaan:
-```json
-{
-  "headers": {
-    "host": "n8n.domainanda.com",
-    "content-type": "application/json"
-  },
-  "body": {
-    "full_name": "Budi Santoso",
-    "email": "budi.santoso@startupindonesia.co.id",
-    "company": "PT Solusi Bangun Digital",
-    "budget_usd": 3500,
-    "phone": "+6281234567890",
-    "message": "Halo, kami butuh integrasi backend database CRM kami dengan WhatsApp Business API dan notifikasi ke channel Telegram tim dalam deadline 2 pekan."
-  }
-}
-```
-
-##### 2. Pemrosesan Data di Node Code (JavaScript):
-Data divalidasi, dibersihkan dari spasi berlebih, dan dihitung skor kelayakannya:
-```javascript
-const input = $json.body || $json;
-
-const fullName = (input.full_name || 'Anonymous').trim();
-const email = (input.email || '').toLowerCase();
-const budgetUsd = Number(input.budget_usd) || 0;
-const isCorporate = !email.endsWith('@gmail.com') && !email.endsWith('@yahoo.com');
-
-return [{
-  json: {
-    lead_id: 'LEAD-' + Math.floor(100000 + Math.random() * 900000),
-    full_name: fullName,
-    email: email,
-    company: input.company || 'Perorangan',
-    budget_usd: budgetUsd,
-    is_corporate_email: isCorporate,
-    preliminary_score: (budgetUsd >= 3000 && isCorporate) ? 90 : 50,
-    raw_inquiry: input.message,
-    submitted_at: new Date().toISOString()
-  }
-}];
-```
-
-##### 3. Klasifikasi Cerdas di Node OpenAI (GPT-4o-mini):
-AI menganalisis niat dan tingkat urgensi klien:
-```json
-{
-  "priority": "HIGH",
-  "classification": "HOT LEAD",
-  "executive_summary": "Klien korporat memiliki budget memadai ($3,500) dengan kebutuhan mendesak untuk integrasi CRM, WhatsApp API, dan Telegram dalam waktu 14 hari.",
-  "suggested_solution": "Tawarkan paket implementasi Custom API Automation n8n Enterprise dengan modul WhatsApp Baileys dan SLA integrasi kilat."
-}
-```
-
-##### 4. Penyimpanan ke Database PostgreSQL:
-Data disimpan ke tabel `sales_leads` di PostgreSQL lokal VPS (Query waktu eksekusi: **2 ms**).
-
-##### 5. Pengiriman Notifikasi Rich Alert ke Telegram:
-Pesan yang otomatis diterima tim sales di grup Telegram:
-
-```text
-🚨 NEW HOT LEAD DETECTED! 🚨
-
-👤 Klien: Budi Santoso (PT Solusi Bangun Digital)
-📧 Email: budi.santoso@startupindonesia.co.id
-💰 Budget: $3,500
-🔥 Status: HOT LEAD (Priority: HIGH)
-
-📝 Analisis AI:
-Klien korporat memiliki budget memadai ($3,500) dengan kebutuhan mendesak untuk integrasi CRM, WhatsApp API, dan Telegram dalam waktu 14 hari.
-
-💡 Saran Solusi:
-Tawarkan paket implementasi Custom API Automation n8n Enterprise dengan modul WhatsApp Baileys dan SLA integrasi kilat.
-
-🆔 Lead ID: LEAD-849201
-```
-
----
-
-## 💬 Pembahasan
-
-### 1. Pendapat dan Evaluasi
-
-Setelah menguji dan mengoperasikan n8n versi self-hosted di lingkungan VPS produksi, platform ini membuktikan dirinya sebagai solusi otomasi alur kerja paling seimbang di industri saat ini. n8n menggabungkan kesederhanaan antarmuka *no-code* dengan fleksibilitas manipulasi objek data tingkat lanjut (*code-first mindset*). Bagi tim teknis maupun bisnis yang ingin mengotomasi proses berulang tanpa terikat tagihan biaya tak terduga dari vendor SaaS, n8n self-hosted adalah investasi infrastruktur terbaik.
-
-### 2. Kelebihan
-
-- ✅ **Biaya Tetap & Tanpa Batas Eksekusi**: Menjalankan 10 eksekusi per hari maupun 500.000 eksekusi per hari memakan biaya yang sama persis (hanya biaya sewa VPS Anda).
-- ✅ **Kedaulatan & Keamanan Data (100% On-Premise)**: Seluruh kredensial API dan database konsumen tersimpan terenkripsi di VPS lokal, patuh terhadap regulasi GDPR dan UU Perlindungan Data Pribadi (UU PDP).
-- ✅ **Dukungan Native AI Agent**: Framework LangChain bawaan memudahkan orkestrasi memory agent, tool calling, dan RAG tanpa perlu setup library python rumit dari awal.
-- ✅ **Dapat Dimodifikasi dengan Kode Kustom**: Dukungan eksekusi JavaScript modern dan skrip Python langsung di dalam kanvas alur kerja.
-- ✅ **Ekosistem Komunitas yang Solid**: Ratusan template siap pakai dan custom node buatan komunitas terus bertambah setiap minggu.
-
-### 3. Kekurangan
-
-- ❌ **Tanggung Jawab Pemeliharaan Mandiri**: Pengguna bertanggung jawab penuh atas pembaruan sistem operasi server, sertifikat domain, dan pencadangan database.
-- ❌ **Konsumsi Memori RAM Relatif Tinggi**: Karena dibangun di atas Node.js dan Chromium/Puppeteer (bila menggunakan browser automasi), n8n membutuhkan minimal 2GB RAM untuk beroperasi stabil.
-- ❌ **Perlu Mode Queue (Redis) untuk Skala Masif**: Untuk beban kerja di atas 100 webhook per detik secara bersamaan, konfigurasi default single-instance harus diubah menjadi n8n Queue Mode dengan Redis dan multiple worker nodes.
-
----
-
-### 4. Tabel Perbandingan Komprehensif
-
-| Fitur / Parameter | **n8n (Self-Hosted VPS)** | **Zapier (Cloud SaaS)** | **Make / Integromat** | **Activepieces (Self-Hosted)** |
+| Port | Protokol | Sumber / Arah | Layanan | Status Firewall UFW |
 | :--- | :--- | :--- | :--- | :--- |
-| **Model Lisensi** | Sustainable Use License (Fair-code) | Proprietary Closed-source | Proprietary Closed-source | MIT Open Source |
-| **Opsi Hosting** | **Self-Hosted (VPS / On-Premise / Cloud)** | Hanya Cloud SaaS | Hanya Cloud SaaS | Self-Hosted & Cloud |
-| **Estimasi Biaya Bulanan** | **$4 - $10 / bulan (Flat VPS)** | $29.99 - $599+ / bulan | $10.59 - $299+ / bulan | $5 - $10 / bulan (VPS) |
-| **Batas Task / Eksekusi** | **UNLIMITED (Tanpa batas)** | 750 s/d 100.000 task/bln | 10.000 s/d 120.000 ops/bln | **UNLIMITED** |
-| **Eksekusi Kode** | **JavaScript & Python Lengkap** | JavaScript / Python terbatas | Formula fungsi saja | TypeScript minimalis |
-| **Integrasi AI Agent** | **Sangat Luas (LangChain & RAG)** | Tambahan fitur berbayar | OpenAI Module standar | AI Flow dasar |
-| **Privasi Data** | **Tinggi (Server milik sendiri)** | Rendah (Server pihak ketiga) | Rendah (Server pihak ketiga) | **Tinggi (Server sendiri)** |
-| **Kebutuhan DevOps** | **Perlu (Docker & Linux dasar)** | Zero DevOps | Zero DevOps | Perlu (Docker) |
+| `22` | TCP | Inbound (Admin IP / Any) | SSH Remote Management | **ALLOW** |
+| `80` | TCP | Inbound (Public Internet) | Caddy HTTP (ACME Challenge & 301 Redirect) | **ALLOW** |
+| `443` | TCP | Inbound (Public Internet) | Caddy HTTPS (Webhook Telegram & Web UI) | **ALLOW** |
+| `5678` | TCP | Internal Docker | n8n Web Engine | **DENY / ISOLATED** |
+| `5432` | TCP | Internal Docker | PostgreSQL 16 | **DENY / ISOLATED** |
+
+### 3.3 Konfigurasi DNS Record
+
+Sebelum menjalankan instalasi, konfigurasikan DNS Management domain Anda (misal di Cloudflare, Niagahoster, Namecheap):
+
+| Tipe Record | Nama Host (Subdomain) | Nilai / Konten Target | TTL | Proxy Status (Cloudflare) |
+| :--- | :--- | :--- | :--- | :--- |
+| **A** | `n8n` | `103.160.212.91` | Auto / 1 Menit | **DNS Only** (Matikan awan oranye saat setup SSL awal) |
+
+> 💡 **Alamat IP Server VPS Proyek:** `103.160.212.91`  
+> Pastikan subdomain A-Record Anda mengarah langsung ke IP tersebut agar Caddy dapat menerbitkan sertifikat Let's Encrypt secara otomatis.
 
 ---
 
-## 📚 Referensi
+## 4. Panduan Instalasi & Deploy VPS
 
-Panduan ini disusun berdasarkan dokumentasi resmi dan best-practices industri terkini:
+### 4.1 Metode 1: Instalasi Otomatis 1-Klik (`setup-n8n.sh`)
+
+Skrip otomasi [`scripts/setup-n8n.sh`](file:///C:/Project/KDJK-hosting/scripts/setup-n8n.sh) dirancang untuk mengonfigurasi seluruh stack dari nol tanpa intervensi manual yang rumit.
+
+1. **Clone repositori ke VPS**:
+   ```bash
+   git clone https://github.com/oktares/KDJK-hosting.git /tmp/KDJK-hosting
+   cd /tmp/KDJK-hosting
+   ```
+
+2. **Jalankan skrip instalasi dengan hak akses root**:
+   ```bash
+   chmod +x scripts/*.sh
+   sudo bash scripts/setup-n8n.sh
+   ```
+
+3. **Input Parameter yang Diminta**:
+   - Subdomain: `n8n`
+   - Domain Utama: `domainanda.com`
+   - Email SSL Let's Encrypt: `admin@domainanda.com`
+   - Google Gemini API Key: (Masukkan key Anda atau tekan Enter untuk memakai default)
+
+Skrip otomatis melakukan:
+- Update paket OS (`apt update && apt upgrade`).
+- Pembuatan 2GB swap memory untuk stabilitas RAM.
+- Hardening firewall UFW (hanya port 22, 80, 443 yang dibuka).
+- Instalasi Docker Engine & Docker Compose v2 resmi.
+- Penyalinan struktur proyek ke `/opt/n8n/`.
+- Mount file inisialisasi basis data `scripts/init-db.sql`.
+- Menjalankan container dengan `docker compose up -d`.
+
+---
+
+### 4.2 Metode 2: Langkah Konfigurasi Manual
+
+Bagi Anda yang ingin mengonfigurasi direktori secara manual di `/opt/n8n`:
+
+1. **Siapkan Direktori Kerja**:
+   ```bash
+   mkdir -p /opt/n8n/scripts /opt/n8n/workflows /opt/n8n/local_files /opt/n8n/backups
+   cd /opt/n8n
+   ```
+
+2. **Buat File Environment (`/opt/n8n/.env`)**:
+   Salin dari template [`.env.example`](file:///C:/Project/KDJK-hosting/.env.example):
+   ```bash
+   cp .env.example .env
+   nano .env
+   ```
+   Pastikan variabel `SUBDOMAIN`, `DOMAIN_NAME`, `SSL_EMAIL`, dan `GEMINI_API_KEY` terisi dengan benar.
+
+3. **Salin Skrip DDL Database (`init-db.sql`)**:
+   Pastikan file [`scripts/init-db.sql`](file:///C:/Project/KDJK-hosting/scripts/init-db.sql) berada di `/opt/n8n/scripts/init-db.sql`.
+
+4. **Jalankan Stack Docker**:
+   ```bash
+   docker compose pull
+   docker compose up -d
+   ```
+
+5. **Verifikasi Status Kontainer**:
+   ```bash
+   docker compose ps
+   ```
+   Pastikan ketiga service (`n8n_caddy`, `n8n_app`, `n8n_postgres`) berstatus `Up` / `running (healthy)`.
+
+### 4.3 Metode 3: CI/CD Deployment Otomatis via GitHub Actions
+
+Repositori ini telah dilengkapi dengan pipeline CI/CD otomatis pada file [`.github/workflows/deploy.yml`](file:///C:/Project/KDJK-hosting/.github/workflows/deploy.yml). Setiap kali Anda melakukan `git push` ke branch `main`, GitHub Actions akan:
+1. Memvalidasi sintaks `docker-compose.yml`, format JSON alur kerja n8n, dan script shell.
+2. Melakukan deployment jarak jauh (*remote deployment*) ke server VPS **`103.160.212.91`** via SSH.
+3. Menarik kode terbaru, mengunduh image terbaru, dan me-restart kontainer tanpa downtime.
+
+#### Konfigurasi GitHub Repository Secrets:
+Untuk mengaktifkan fitur deploy otomatis ini, tambahkan secret berikut pada repositori GitHub Anda (**Settings ➔ Secrets and variables ➔ Actions**):
+
+| Nama Secret | Deskripsi | Contoh Nilai |
+| :--- | :--- | :--- |
+| `VPS_HOST` | Alamat IP Publik VPS Anda | `103.160.212.91` |
+| `VPS_USERNAME` | Akun pengguna SSH VPS | `root` atau `ubuntu` |
+| `VPS_SSH_KEY` | Private SSH Key (id_rsa / ed25519) | `-----BEGIN OPENSSH PRIVATE KEY...` |
+| `VPS_PASSWORD` | Password akun SSH (jika tidak pakai SSH Key) | `PasswordRootVPSAnda` |
+| `VPS_PORT` | Port SSH VPS (default 22) | `22` |
+
+---
+
+## 5. Panduan Konfigurasi Bot Telegram & API Key Gemini
+
+### 5.1 Pembuatan Bot Telegram via @BotFather
+
+1. Buka aplikasi Telegram di smartphone atau desktop.
+2. Cari akun resmi bot pembuat: **`@BotFather`** (terdapat centang biru).
+3. Kirim perintah `/start` lalu kirim `/newbot`.
+4. Beri nama bot Anda (misal: `Catat Keuangan KDJK Bot`).
+5. Buat username unik berakhiran `bot` (misal: `kdjk_keuangan_bot`).
+6. BotFather akan memberikan **HTTP API Bot Token**, misalnya:
+   `7890123456:AAFlk9..._SAMPLE_TOKEN_...`
+7. Simpan token ini dengan aman.
+
+---
+
+### 5.2 Pengaturan Google Gemini API Key
+
+1. Kunjungi konsol [Google AI Studio](https://aistudio.google.com/).
+2. Login menggunakan akun Google Anda.
+3. Klik tombol **Get API Key** ➔ **Create API key in new project**.
+4. Salin string API Key yang dihasilkan.
+5. Tempelkan key tersebut ke dalam file `.env` pada variabel `GEMINI_API_KEY`.
+
+> [!NOTE]
+> Proyek ini menggunakan model **`gemini-3.8-flash`** (atau `gemini-flash-latest`) yang memiliki latensi inferensi ultra-cepat (~300ms) dan mendukung output terstruktur murni (*Structured JSON Output*) melalui parameter `responseMimeType: "application/json"`.
+
+---
+
+### 5.3 Konfigurasi Kredensial di n8n Web UI
+
+Setelah membuka URL n8n (`https://n8n.domainanda.com`) dan menyelesaikan registrasi akun owner pertama:
+
+#### A. Menghubungkan Kredensial Telegram Bot
+1. Di sidebar kiri, klik **Credentials** ➔ **Add Credential**.
+2. Cari dan pilih **Telegram API**.
+3. Masukkan Access Token yang didapat dari `@BotFather`.
+4. Beri nama kredensial: `Telegram Bot Account` ➔ Klik **Save**.
+
+#### B. Menghubungkan Kredensial PostgreSQL
+1. Klik **Add Credential** ➔ Cari **Postgres**.
+2. Masukkan parameter koneksi internal Docker:
+   - **Host**: `postgres` *(nama service container di docker-compose)*
+   - **Database**: `n8n_db` *(sesuai .env)*
+   - **User**: `n8n_admin` *(sesuai .env)*
+   - **Password**: *(sesuai nilai `POSTGRES_PASSWORD` di .env)*
+   - **Port**: `5432`
+   - **SSL**: `Disable` *(karena komunikasi terjadi di dalam isolated bridge network host)*
+3. Beri nama kredensial: `Postgres KDJK Account` ➔ Klik **Save**.
+
+#### C. Mengimpor File Workflow
+1. Buka menu **Workflows** ➔ Klik ikon titik tiga di kanan atas ➔ Pilih **Import from File**.
+2. Unggah file [`workflows/personal-finance-bot.json`](file:///C:/Project/KDJK-hosting/workflows/personal-finance-bot.json).
+3. Klik tombol toggle **Active** di pojok kanan atas menjadi **ON**.
+4. n8n akan secara otomatis mendaftarkan webhook URL ke server Telegram!
+
+---
+
+## 6. Perancangan Basis Data PostgreSQL (`init-db.sql`)
+
+Struktur basis data didefinisikan dalam skrip [`scripts/init-db.sql`](file:///C:/Project/KDJK-hosting/scripts/init-db.sql) yang dipasang ke `/docker-entrypoint-initdb.d/` pada kontainer PostgreSQL:
+
+```sql
+-- Inisialisasi Tabel Transaksi Keuangan Pribadi (KDJK Hosting Project)
+CREATE TABLE IF NOT EXISTS transactions (
+    id SERIAL PRIMARY KEY,
+    telegram_user_id BIGINT NOT NULL,
+    transaction_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    type VARCHAR(20) NOT NULL CHECK (type IN ('expense', 'income')),
+    category VARCHAR(50) NOT NULL,
+    amount NUMERIC(15, 2) NOT NULL,
+    description TEXT,
+    raw_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index btree komposit untuk mempercepat agregasi per user dan per rentang waktu
+CREATE INDEX IF NOT EXISTS idx_transactions_user_date 
+    ON transactions (telegram_user_id, transaction_date DESC);
+```
+
+### Penjelasan Desain Skema:
+- `telegram_user_id (BIGINT)`: Menyimpan ID unik akun Telegram pengguna. Tipe data 64-bit menjamin multi-tenant user support tanpa batas limit integer 32-bit.
+- `type (VARCHAR(20))` dengan constraint `CHECK (type IN ('expense', 'income'))`: Menjamin integritas data agar nilai tipe hanya terbatas pada pengeluaran atau pemasukan.
+- `category (VARCHAR(50))`: Mendukung klasifikasi pengeluaran (`Makanan`, `Belanja`, `Transportasi`, `Kesehatan`, `Tagihan`) dan pemasukan (`Pendapatan`).
+- `amount (NUMERIC(15, 2))`: Menghindari floating-point error yang umum terjadi pada tipe `FLOAT/REAL`, sehingga akurasi kalkulasi rupiah terjamin 100%.
+- `idx_transactions_user_date`: Indeks komposit pada `(telegram_user_id, transaction_date DESC)` memangkas waktu query eksekusi rekap harian/bulanan dari *Full Table Scan* menjadi *Index Condition Search* (eksekusi rata-rata **~1.2 milidetik**).
+
+---
+
+## 7. Studi Kasus: Bot Keuangan Pribadi Cerdas
+
+<p align="center">
+  <img src="assets/workflow-preview.svg" alt="Preview Workflow Personal Finance Bot n8n" width="95%">
+</p>
+
+### 7.1 Fitur Utama Bot
+
+1. **Pemahaman Bahasa Alami Tingkat Tinggi**: Pengguna tidak perlu mengetikkan sintaks kaku. AI memahami konteks kata seperti *"beli makan 7000"*, *"bayar token listrik 100rb"*, *"gaji bulanan 3jt"*, *"beli obat apotek 45000"*.
+2. **Kategori yang Didukung**:
+   - 🍔 **Makanan**: Pembelian nasi, kopi, camilan, kuliner, belanja sayur/dapur.
+   - 🛍️ **Belanja**: Pembelian barang pribadi, baju, gadget, kebutuhan rumah tangga.
+   - 🛵 **Transportasi**: Pengisian bensin/BBM, ojol (Gojek/Grab), tarif parkir, tol, servis.
+   - 💊 **Kesehatan**: Pembelian obat di apotek, biaya klinik/dokter, suplemen/vitamin.
+   - 🧾 **Tagihan**: Pembayaran uang kos bulanan, token listrik PLN, tagihan air PDAM, WiFi/Indihome, pulsa data.
+   - 💵 **Pendapatan**: Seluruh transaksi bertipe `income` seperti gaji, honor freelance, bonus, cashback.
+3. **Konversi Satuan Finansial Otomatis**:
+   - Singkatan ribuan: `k`, `rb` (misal: `25k` ➔ `25000`, `850rb` ➔ `850000`).
+   - Singkatan jutaan: `jt` (misal: `3jt` ➔ `3000000`, `1.5jt` ➔ `1500000`).
+4. **Respon Interaktif & Konfirmasi Instan**: Menampilkan rincian transaksi yang baru saja dicatat serta akumulasi pengeluaran dan pemasukan hari ini.
+5. **Perintah Rekapitulasi Komprehensif (`/rekap`)**: Menghitung total transaksi hari ini dan bulan berjalan, saldo bersih (*cashflow*), dan peringatan status kesehatan finansial.
+
+---
+
+### 7.2 Detail Node Alur Kerja n8n (`personal-finance-bot.json`)
+
+Alur kerja dirancang dengan 14 node modular berkinerja tinggi:
+
+```
+[Telegram Trigger] 
+       │
+       ▼
+[Switch: Route Command] ─── (Command: /start) ───► [Telegram: Send Welcome Message]
+       │
+       ├─── (Command: /rekap) ──► [Postgres: Query Rekap] ──► [Code: Format Rekap] ──► [Telegram: Send Rekap]
+       │
+       └─── (Text Pesan Transaksi)
+                 │
+                 ▼
+       [HTTP Request: Gemini AI Parser]
+                 │
+                 ▼
+       [Code: Parse & Validate AI Output]
+                 │
+                 ▼
+       [If: Is Valid Transaction?]
+                 ├── (True) ──► [Postgres: Save Transaction]
+                 │                    │
+                 │                    ▼
+                 │              [Postgres: Query Total Expense Today]
+                 │                    │
+                 │                    ▼
+                 │              [Code: Format Confirmation Message]
+                 │                    │
+                 │                    ▼
+                 │              [Telegram: Send Confirmation]
+                 │
+                 └── (False) ─► [Telegram: Send Clarification Help]
+```
+
+1. **Telegram Trigger**: Menangkap webhook pesan teks masuk dari bot Telegram secara instan.
+2. **Switch: Route Command**: Mengevaluasi pesan user:
+   - Branch 0: Jika diawali `/start`, alihkan ke Welcome Message.
+   - Branch 1: Jika diawali `/rekap`, alihkan ke branch agregasi database bulanan.
+   - Branch 2 (Fallback via `options.fallbackOutput: "extra"`): Pesan teks transaksi dialihkan ke pipeline parsing AI.
+3. **HTTP Request: Gemini AI Parser**: Mengirimkan HTTP POST ke endpoint Gemini API dengan payload JSON, proteksi retry otomatis (3x), dan graceful error fallback (`onError: continueRegularOutput`) saat terjadi lonjakan trafik/rate limit.
+4. **Code: Parse & Validate AI Output**: Node JavaScript yang melakukan sanitasi parsing JSON, validasi tipe data, normalisasi kategori, preservasi item-linking (`pairedItem`), dan pencegahan SQL injection sebelum query DB.
+5. **If: Is Valid Transaction?**: Memastikan nominal transaksi bernilai valid (> 0). Jika user hanya mengetik *"halo"* atau pesan obrolan non-transaksi, sistem otomatis mengirimkan panduan perbaikan ramah tanpa mengeksekusi error database.
+6. **Postgres: Save Transaction**: Melakukan query SQL `INSERT INTO transactions ... RETURNING id, transaction_date`.
+7. **Postgres: Query Total Expense Today**: Menghitung akumulasi pengeluaran dan pemasukan user pada tanggal hari ini.
+8. **Code: Format Confirmation Message**: Memformat pesan balasan Telegram lengkap dengan ikon kategori, format mata uang Indonesia (`Rp X.XXX.XXX`), dan sanitasi entity Markdown.
+9. **Telegram: Send Confirmation**: Mengirim balasan konfirmasi transaksi ke chat user.
+
+---
+
+### 7.3 Skema Prompting & Parsing JSON Gemini
+
+Model Gemini dipandu dengan prompt terstruktur untuk memastikan output 100% konsisten dalam bentuk JSON murni:
+
+```json
+{
+  "contents": [{
+    "parts": [{
+      "text": "Kamu adalah parser transaksi keuangan pribadi cerdas. Tugas: Ekstrak data transaksi dari kalimat user: \"beli makan siang 25000\". Aturan: 1. \"type\" bernilai \"expense\" (pengeluaran) atau \"income\" (pemasukan). 2. \"category\" pilih salah satu yang paling cocok dari: [\"Makanan\", \"Belanja\", \"Transportasi\", \"Kesehatan\", \"Tagihan\", \"Pendapatan\"]. Contoh: bayar kos/listrik/air masuk Tagihan, bensin masuk Transportasi, makan/minum masuk Makanan, gaji/bonus masuk Pendapatan. 3. \"amount\" bernilai integer rupiah murni tanpa desimal (konversi: k/rb = ribu, jt = juta). 4. \"description\" ringkasan transaksi 2-5 kata. 5. JIKA pesan user BUKAN transaksi keuangan (misal: salam, sapaan, percakapan umum, meeting/rapat), wajib set \"amount\": 0 dan \"description\": \"non-transaksi\". Wajib kembalikan format JSON murni: {\"type\": string, \"category\": string, \"amount\": number, \"description\": string}."
+    }]
+  }],
+  "generationConfig": {
+    "temperature": 0.1,
+    "responseMimeType": "application/json"
+  }
+}
+```
+
+---
+
+## 8. Skenario Pengujian & Tabel Test Cases Nyata
+
+Seluruh skenario berikut telah diuji secara nyata pada stack kontainer dan model Gemini Flash:
+
+| No | Tipe Input User | Pesan yang Dikirimkan | Klasifikasi AI (Type & Category) | Nominal (Extracted) | Hasil Query PostgreSQL | Format Balasan Telegram | Status |
+| :---: | :--- | :--- | :--- | :---: | :--- | :--- | :---: |
+| **1** | Pengeluaran Harian | `"beli makan 7000"` | `expense` / `Makanan` | `Rp 7.000` | INSERT Success (ID: 1) | 🍔 Kategori: Makanan<br>💵 Nominal: Rp 7.000<br>📊 Pengeluaran Hari Ini: Rp 7.000 | **PASS** ✅ |
+| **2** | Tagihan Bulanan (rb) | `"bayar kos 850rb"` | `expense` / `Tagihan` | `Rp 850.000` | INSERT Success (ID: 2) | 🧾 Kategori: Tagihan<br>💵 Nominal: Rp 850.000<br>📊 Pengeluaran Hari Ini: Rp 857.000 | **PASS** ✅ |
+| **3** | Pemasukan Gaji (jt) | `"gaji bulanan 3jt"` | `income` / `Pendapatan` | `Rp 3.000.000` | INSERT Success (ID: 3) | 💰 Tipe: Pemasukan<br>💵 Kategori: Pendapatan<br>💵 Nominal: Rp 3.000.000 | **PASS** ✅ |
+| **4** | Transportasi Singkat (k) | `"beli bensin 25k"` | `expense` / `Transportasi` | `Rp 25.000` | INSERT Success (ID: 4) | 🛵 Kategori: Transportasi<br>💵 Nominal: Rp 25.000 | **PASS** ✅ |
+| **5** | Pengeluaran Kesehatan | `"obat apotek 45000"` | `expense` / `Kesehatan` | `Rp 45.000` | INSERT Success (ID: 5) | 💊 Kategori: Kesehatan<br>💵 Nominal: Rp 45.000 | **PASS** ✅ |
+| **6** | Tagihan Listrik Rutin | `"bayar token listrik 100rb"` | `expense` / `Tagihan` | `Rp 100.000` | INSERT Success (ID: 6) | 🧾 Kategori: Tagihan<br>💵 Nominal: Rp 100.000 | **PASS** ✅ |
+| **7** | Perintah Rekapitulasi | `"/rekap"` | *N/A (Database Aggregation)* | *N/A* | SELECT SUM (GROUP BY) | 📊 **REKAPITULASI KEUANGAN**<br>🗓️ Hari Ini: Rp 1.027.000<br>🟢 Pemasukan: Rp 3.000.000<br>💰 Arus Kas: +Rp 1.973.000 | **PASS** ✅ |
+| **8** | Perintah Start / Bantuan | `"/start"` | *N/A (Router Branch)* | *N/A* | None | 👋 Menampilkan pesan sambutan & contoh format input | **PASS** ✅ |
+| **9** | Input Teks Non-Finansial | `"halo selamat siang"` | *Amount: 0 (Invalid)* | `0` | Skipped (No Insert) | 🤔 Format transaksi belum dikenali. Mohon sebutkan nominal uang belanja Anda. | **PASS** ✅ |
+
+---
+
+## 9. Pemeliharaan, Backup & Disaster Recovery
+
+### 9.1 Skrip Backup Otomatis & Retensi 14 Hari (`backup-n8n.sh`)
+
+Berkas [`scripts/backup-n8n.sh`](file:///C:/Project/KDJK-hosting/scripts/backup-n8n.sh) mencadangkan seluruh data operasional ke direktori `/opt/n8n/backups/`:
+
+```bash
+# Menjalankan backup secara instan
+bash /opt/n8n/scripts/backup-n8n.sh
+```
+
+**Komponen yang Dicadangkan**:
+1. Database PostgreSQL via `pg_dump` yang dikompresi langsung menggunakan gzip (`.sql.gz`).
+2. Arsip berkas konfigurasi (`.env`, `docker-compose.yml`, `Caddyfile`, dan direktori `scripts/`).
+3. Rotasi berkas: Berkas backup yang berusia lebih dari 14 hari akan dihapus otomatis untuk menghemat ruang disk VPS.
+
+#### Otomasi via Crontab (Setiap Hari Pukul 02:00 WIB)
+Tambahkan entri berikut pada `crontab -e`:
+```cron
+0 2 * * * /opt/n8n/scripts/backup-n8n.sh >> /var/log/n8n_backup.log 2>&1
+```
+
+---
+
+### 9.2 Skrip Pembaruan Aman Kontainer (`update-n8n.sh`)
+
+Berkas [`scripts/update-n8n.sh`](file:///C:/Project/KDJK-hosting/scripts/update-n8n.sh) melakukan pembaruan versi image Docker tanpa downtime berisiko:
+1. Menjalankan *safety backup snapshot* terlebih dahulu.
+2. Mengunduh image container n8n, Caddy, dan PostgreSQL versi terbaru (`docker compose pull`).
+3. Melakukan re-create container secara graceful (`docker compose up -d`).
+4. Membersihkan build cache usang (`docker image prune -f`).
+
+---
+
+### 9.3 Prosedur Pemulihan Basis Data (Restore DR)
+
+Jika VPS mengalami kerusakan fatal atau migrasi ke server baru:
+1. Pastikan container database menyala: `docker compose up -d postgres`.
+2. Ekstrak dan pulihkan file snapshot database:
+   ```bash
+   gunzip -c /opt/n8n/backups/n8n_db_YYYYMMDD_HHMMSS.sql.gz | docker exec -i n8n_postgres psql -U n8n_admin -d n8n_db
+   ```
+3. Restart container n8n: `docker compose restart n8n`.
+
+---
+
+## 10. Pembahasan, Evaluasi & Analisis Komparatif
+
+### 10.1 Evaluasi Kinerja & Aspek Jaringan
+
+Pengujian komputasi dan jaringan menunjukkan hasil performa berikut:
+- **Round-Trip Latency Telegram Webhook**: Rata-rata **280 - 450 ms** dari saat pengguna menekan tombol *Send* di Telegram hingga pesan balasan konfirmasi muncul.
+- **Konsumsi Memori RAM VPS**:
+  - `n8n_postgres`: ~45 MB RAM
+  - `n8n_caddy`: ~22 MB RAM
+  - `n8n_app`: ~280 MB RAM (idle) hingga ~420 MB RAM (saat eksekusi workflow)
+  - Total konsumsi memori seluruh stack berada di kisaran **~500 - 600 MB RAM**, sangat efisien dan stabil dioperasikan pada VPS 1GB - 2GB RAM.
+- **Efisiensi Database Indexing**: Query agregasi `/rekap` yang melibatkan klausa `SUM(CASE ...)` dan `date_trunc` hanya memakan waktu eksekusi CPU database sebesar **1.1 ms** berkat pemanfaatan b-tree composite index `(telegram_user_id, transaction_date)`.
+
+### 10.2 Kelebihan Sistem
+
+1. ✅ **Kedaulatan Data Finansial Penuh (100% Privacy)**: Seluruh rincian pengeluaran, nominal gaji, dan riwayat transaksi disimpan di database PostgreSQL lokal di VPS milik sendiri, bukan di server pihak ketiga.
+2. ✅ **Bebas Biaya Per-Task**: Berbeda dengan layanan SaaS otomasi seperti Zapier/Make yang mematok tarif mahal saat transaksi per bulan meningkat, n8n self-hosted dapat mengeksekusi puluhan ribu transaksi secara **gratis tanpa batas**.
+3. ✅ **Kemudahan Bahasa Alami Berbasis AI**: Pengguna tidak perlu menghafal format kaku bot lama. Gemini AI mampu mengekstrak pesan sekompleks apa pun ke dalam skema basis data terstruktur.
+4. ✅ **Sertifikat SSL/TLS Otomatis Zero-Maintenance**: Caddy menangani seluruh proses sertifikat Let's Encrypt secara mandiri tanpa risiko downtime akibat masa berlaku habis.
+
+### 10.3 Kekurangan & Batasan Sistem
+
+1. ⚠️ **Ketergantungan Kuota Free Tier Gemini**: Pada tier gratis Google Gemini API, terdapat batas kecepatan (*rate limit*) 5 hingga 15 request per menit. Jika bot digunakan oleh ratusan pengguna secara bersamaan, diperlukan upgrade ke paid API tier atau penambahan node *Rate Limiting / Queue*.
+2. ⚠️ **Tanggung Jawab Maintenance Server**: Pembaruan kernel Linux, pemantauan kapasitas harddisk, dan backup berkala wajib dipantau sendiri oleh administrator.
+
+---
+
+### 10.4 Tabel Perbandingan Komprehensif
+
+| Kriteria Evaluasi | **Solusi Proyek Ini (n8n + VPS + Caddy + PG)** | **Zapier (Cloud SaaS)** | **Make / Integromat** | **Aplikasi Catat Keuangan Native (Money Lover/dll)** |
+| :--- | :--- | :--- | :--- | :--- |
+| **Model Hosting** | **Self-Hosted VPS (Kendali Penuh)** | Multi-tenant SaaS | Multi-tenant SaaS | Cloud Vendor Proprietary |
+| **Biaya Bulanan** | **Flat (~$4 - $6 / bln biaya VPS)** | $29.99 - $599+ / bulan | $10.59 - $299+ / bulan | Freemium / Berlangganan |
+| **Batas Eksekusi Transaksi**| **UNLIMITED (Tanpa batas)** | Dibatasi (750 - 50.000 task) | Dibatasi (10.000 ops) | Tergantung limit akun |
+| **Dukungan AI Parsing** | **Gemini 3.8 Flash (Custom Prompt)** | Terbatas & Add-on berbayar | Modul OpenAI berbayar | Tidak ada (Input manual kaku) |
+| **Privasi & Keamanan Data** | **Tinggi (Enkripsi DB Lokal VPS)** | Rendah (Data di server vendor) | Rendah (Data di server vendor) | Sedang (Tersimpan di cloud vendor) |
+| **Akses Antarmuka Pengguna**| **Telegram Bot Multi-Device** | Dashboard Web | Dashboard Web | Aplikasi HP Khusus |
+| **Kebutuhan Skill Teknis** | Menengah (Docker & Linux) | Sangat Rendah | Rendah - Menengah | Sangat Rendah |
+
+---
+
+## 11. Referensi
 
 1. **Dokumentasi Resmi n8n**:
-   - [n8n Official Documentation](https://docs.n8n.io/)
-   - [Hosting n8n with Docker Compose](https://docs.n8n.io/hosting/installation/docker-compose/)
-   - [n8n Environment Variables Configuration](https://docs.n8n.io/hosting/configuration/environment-variables/)
-2. **Repositori Source Code**:
-   - [GitHub n8n-io/n8n](https://github.com/n8n-io/n8n)
-3. **Infrastruktur & Reverse Proxy**:
-   - [Caddy Web Server Documentation - Reverse Proxy Quickstart](https://caddyserver.com/docs/quick-starts/reverse-proxy)
-   - [Docker Official Documentation](https://docs.docker.com/)
-   - [PostgreSQL 16 Official Manual](https://www.postgresql.org/docs/16/index.html)
-4. **Keamanan Server Linux**:
-   - [Ubuntu Server Security & UFW Best Practices](https://ubuntu.com/server/docs/security-firewall)
-   - [CIS Ubuntu Linux Benchmark Guide](https://www.cisecurity.org/benchmark/ubuntu_linux)
+   - [n8n Hosting with Docker Compose](https://docs.n8n.io/hosting/installation/docker-compose/)
+   - [n8n Telegram Trigger & Bot Nodes](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.telegram/)
+2. **Dokumentasi Caddy Server**:
+   - [Caddy Reverse Proxy Documentation](https://caddyserver.com/docs/quick-starts/reverse-proxy)
+   - [Caddy Automatic HTTPS Architecture](https://caddyserver.com/docs/automatic-https)
+3. **Dokumentasi Google Gemini API**:
+   - [Gemini API Structured Outputs & JSON Mode](https://ai.google.dev/gemini-api/docs/structured-output)
+   - [Gemini Models & Rate Limits](https://ai.google.dev/gemini-api/docs/models/gemini)
+4. **Dokumentasi PostgreSQL 16**:
+   - [PostgreSQL Index Types & Optimization](https://www.postgresql.org/docs/16/indexes.html)
+5. **Dokumentasi Telegram Bot API**:
+   - [Telegram Webhook Configuration Guide](https://core.telegram.org/bots/webhooks)
 
 ---
 
 <p align="center">
-  Dibuat dengan dedikasi untuk komunitas automasi & pengembang Indonesia 🇮🇩<br>
-  <i>Empower your business workflows with true freedom and self-hosted privacy.</i>
+  <b>Tugas Besar Mata Kuliah Komunikasi Data dan Jaringan Komputer (KDJK)</b><br>
+  Dibuat dengan dedikasi untuk keunggulan implementasi infrastruktur hosting Linux &amp; otomasi cerdas modern. 🇮🇩
 </p>

@@ -1,0 +1,20 @@
+# Environment variables and secrets
+.env
+.env.local
+docker-compose.local.yml
+
+# Backups and temporary files
+backups/
+*.log
+*.sql.gz
+*.tar.gz
+
+# Local files directory content (preserve .gitkeep)
+local_files/*
+!local_files/.gitkeep
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

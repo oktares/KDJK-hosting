@@ -27,8 +27,10 @@ fi
 read -rp "Masukkan Subdomain (contoh: n8n): " INPUT_SUBDOMAIN
 read -rp "Masukkan Domain Utama (contoh: perusahaan.com): " INPUT_DOMAIN
 read -rp "Masukkan Email untuk Sertifikat SSL Let's Encrypt: " INPUT_EMAIL
+read -rp "Masukkan Google Gemini API Key [Tekan Enter untuk memakai default]: " INPUT_GEMINI_KEY
 
 INPUT_SUBDOMAIN=${INPUT_SUBDOMAIN:-n8n}
+INPUT_GEMINI_KEY=${INPUT_GEMINI_KEY:-YOUR_GEMINI_API_KEY}
 if [[ -z "$INPUT_DOMAIN" || -z "$INPUT_EMAIL" ]]; then
     echo -e "${RED}[ERROR] Domain dan Email tidak boleh kosong!${NC}"
     exit 1
@@ -101,13 +103,39 @@ EXECUTIONS_DATA_MAX_AGE=168
 EXECUTIONS_DATA_PRUNE_MAX_COUNT=50000
 N8N_LOG_LEVEL=info
 N8N_DIAGNOSTICS_ENABLED=false
+
+GEMINI_API_KEY=${INPUT_GEMINI_KEY}
 EOF
 
-# Salin docker-compose.yml dan Caddyfile jika ada di direktori kerja saat ini
+# Salin docker-compose.yml, Caddyfile, scripts (termasuk init-db.sql), dan workflows
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+mkdir -p "${INSTALL_DIR}/scripts"
+mkdir -p "${INSTALL_DIR}/workflows"
+
 if [ -f "${CURRENT_DIR}/docker-compose.yml" ]; then
     cp "${CURRENT_DIR}/docker-compose.yml" "${INSTALL_DIR}/"
     cp "${CURRENT_DIR}/Caddyfile" "${INSTALL_DIR}/"
+fi
+
+if [ -f "${CURRENT_DIR}/scripts/init-db.sql" ]; then
+    cp "${CURRENT_DIR}/scripts/init-db.sql" "${INSTALL_DIR}/scripts/"
+fi
+
+if [ -f "${CURRENT_DIR}/scripts/backup-n8n.sh" ]; then
+    cp "${CURRENT_DIR}/scripts/backup-n8n.sh" "${INSTALL_DIR}/scripts/"
+    chmod +x "${INSTALL_DIR}/scripts/backup-n8n.sh"
+fi
+
+if [ -f "${CURRENT_DIR}/scripts/update-n8n.sh" ]; then
+    cp "${CURRENT_DIR}/scripts/update-n8n.sh" "${INSTALL_DIR}/scripts/"
+    chmod +x "${INSTALL_DIR}/scripts/update-n8n.sh"
+fi
+
+if [ -d "${CURRENT_DIR}/workflows" ]; then
+    cp -r "${CURRENT_DIR}/workflows/"* "${INSTALL_DIR}/workflows/" || true
+    if [ -f "${INSTALL_DIR}/workflows/personal-finance-bot.json" ]; then
+        sed -i "s|YOUR_GEMINI_API_KEY|${INPUT_GEMINI_KEY}|g" "${INSTALL_DIR}/workflows/personal-finance-bot.json"
+    fi
 fi
 
 # 8. Jalankan Container

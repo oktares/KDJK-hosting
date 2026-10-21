@@ -1,0 +1,93 @@
+name: CI/CD Pipeline - Deploy to VPS KDJK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: production-vps
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: 🔍 Validate & Lint Configurations
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐳 Validate Docker Compose Config
+        run: |
+          docker compose config --quiet
+          echo "✅ docker-compose.yml syntax is valid."
+
+      - name: 📄 Validate Workflow JSON Schema
+        run: |
+          jq empty workflows/personal-finance-bot.json
+          echo "✅ workflows/personal-finance-bot.json is valid JSON."
+
+      - name: 📜 Validate Shell Scripts Syntax
+        run: |
+          bash -n scripts/setup-n8n.sh
+          bash -n scripts/backup-n8n.sh
+          bash -n scripts/update-n8n.sh
+          echo "✅ Shell scripts syntax is valid."
+
+  deploy:
+    name: 🚀 Deploy to VPS (103.160.212.91)
+    needs: [validate]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: 🌐 Execute Remote SSH Deployment
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST || '103.160.212.91' }}
+          username: ${{ secrets.VPS_USERNAME || 'root' }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -e
+            echo "=========================================================="
+            echo "🚀 Memulai Otomasi Deployment ke VPS KDJK (103.160.212.91)"
+            echo "=========================================================="
+
+            INSTALL_DIR="/opt/n8n"
+
+            # 1. Pastikan direktori instalasi sudah ada
+            if [ ! -d "$INSTALL_DIR" ]; then
+              echo "[INFO] Direktori $INSTALL_DIR belum ditemukan. Mengkloning repositori..."
+              mkdir -p "$INSTALL_DIR"
+              git clone https://github.com/oktares/KDJK-hosting.git "$INSTALL_DIR"
+            fi
+
+            cd "$INSTALL_DIR"
+
+            # 2. Ambil perubahan terbaru dari GitHub
+            echo "[INFO] Menarik perubahan terbaru dari branch main..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            # 3. Beri izin eksekusi skrip
+            chmod +x scripts/*.sh
+
+            # 4. Periksa apakah .env sudah ada (pernah setup awal)
+            if [ -f .env ]; then
+              echo "[INFO] File .env terdeteksi. Memperbarui kontainer Docker..."
+              docker compose pull
+              docker compose up -d --remove-orphans
+              echo "[INFO] Membersihkan image lama yang tidak terpakai..."
+              docker image prune -f
+              echo "[SUCCESS] Kontainer n8n, Caddy, dan PostgreSQL aktif dan mutakhir!"
+            else
+              echo "[WARNING] File .env belum ditemukan di $INSTALL_DIR!"
+              echo "Harap jalankan setup manual pertama kali di terminal VPS:"
+              echo "  cd $INSTALL_DIR && sudo bash scripts/setup-n8n.sh"
+            fi
+
+            echo "=========================================================="
+            echo "✅ DEPLOYMENT SELESAI!"
+            echo "=========================================================="

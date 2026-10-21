@@ -1,0 +1,474 @@
+{
+  "name": "Bot Manajemen Keuangan Pribadi (KDJK Telegram & Gemini AI)",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "node-tg-trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        340
+      ],
+      "webhookId": "kdjk-telegram-finance-bot",
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_bot_credentials",
+          "name": "Telegram Bot Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ ($json.message?.text || '').trim() }}",
+                    "rightValue": "/start",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ ($json.message?.text || '').trim() }}",
+                    "rightValue": "/rekap",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "node-switch-router",
+      "name": "Switch: Route Command",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        440,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "=👋 *Selamat datang di Bot Catat Keuangan Pribadi!*\n\nSaya adalah asisten cerdas yang didukung oleh *Google Gemini AI* dan *PostgreSQL* untuk mencatat transaksi keuangan Anda secara instan.\n\n📌 *Format Input Bebas (Bahasa Alami):*\n\n🍔 *Pengeluaran:*\n• `beli makan 7000`\n• `bayar kos 850rb`\n• `bensin motor 25k`\n• `obat apotek 45000`\n• `bayar token listrik 100rb`\n\n💵 *Pemasukan:*\n• `gaji bulanan 3jt`\n• `bonus proyek 750rb`\n• `cashback belanja 20k`\n\n📊 *Perintah Navigasi:*\n• `/rekap` : Rekapitulasi pengeluaran & pemasukan (hari ini & bulan ini)\n• `/start` : Menampilkan petunjuk penggunaan ini\n\n_Silakan ketik transaksi pertama Anda sekarang!_ 🚀",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "node-tg-welcome",
+      "name": "Telegram: Send Welcome Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        140
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_bot_credentials",
+          "name": "Telegram Bot Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT \n  COALESCE(SUM(CASE WHEN type = 'expense' AND transaction_date >= CURRENT_DATE THEN amount ELSE 0 END), 0) AS today_expense,\n  COALESCE(SUM(CASE WHEN type = 'income' AND transaction_date >= CURRENT_DATE THEN amount ELSE 0 END), 0) AS today_income,\n  COALESCE(SUM(CASE WHEN type = 'expense' AND transaction_date >= date_trunc('month', CURRENT_DATE) THEN amount ELSE 0 END), 0) AS month_expense,\n  COALESCE(SUM(CASE WHEN type = 'income' AND transaction_date >= date_trunc('month', CURRENT_DATE) THEN amount ELSE 0 END), 0) AS month_income,\n  COALESCE(COUNT(CASE WHEN transaction_date >= date_trunc('month', CURRENT_DATE) THEN 1 END), 0) AS total_transactions_month\nFROM transactions\nWHERE telegram_user_id = {{ $('Telegram Trigger').first().json.message.from.id }};"
+      },
+      "id": "node-pg-rekap",
+      "name": "Postgres: Query Rekap",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        720,
+        340
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "postgres_credentials",
+          "name": "Postgres KDJK Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nconst formatRp = (num) => 'Rp ' + Number(num || 0).toLocaleString('id-ID');\n\nconst todayExpense = Number(data.today_expense || 0);\nconst todayIncome = Number(data.today_income || 0);\nconst todayNet = todayIncome - todayExpense;\n\nconst monthExpense = Number(data.month_expense || 0);\nconst monthIncome = Number(data.month_income || 0);\nconst monthNet = monthIncome - monthExpense;\n\nconst now = new Date();\nconst dateStr = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });\nconst monthName = now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });\n\nlet msg = `📊 *REKAPITULASI KEUANGAN PRIBADI*\\n`;\nmsg += `📅 _${dateStr}_\\n\\n`;\n\nmsg += `🗓️ *Hari Ini:*\\n`;\nmsg += `  🔺 Pengeluaran : *${formatRp(todayExpense)}*\\n`;\nmsg += `  🟢 Pemasukan   : *${formatRp(todayIncome)}*\\n`;\nmsg += `  ⚖️ Selisih     : *${formatRp(todayNet)}*\\n\\n`;\n\nmsg += `📆 *Bulan Ini (${monthName}):*\\n`;\nmsg += `  🔺 Pengeluaran : *${formatRp(monthExpense)}*\\n`;\nmsg += `  🟢 Pemasukan   : *${formatRp(monthIncome)}*\\n`;\nmsg += `  💰 Arus Kas    : *${formatRp(monthNet)}*\\n`;\nmsg += `  📝 Total Catatan : *${data.total_transactions_month || 0} transaksi*\\n\\n`;\n\nif (monthExpense > monthIncome && monthIncome > 0) {\n  msg += `⚠️ *Perhatian:* Pengeluaran bulan ini lebih besar daripada pemasukan!`;\n} else if (todayExpense === 0 && todayIncome === 0) {\n  msg += `💡 Belum ada transaksi tercatat untuk hari ini. Tetap semangat!`;\n} else {\n  msg += `✨ *Catatan:* Kondisi keuangan Anda terpantau aman dan rapi!`;\n}\n\nconst triggerJson = $('Telegram Trigger').first().json;\nconst chatId = triggerJson.message?.chat?.id;\n\nreturn [{\n  json: {\n    chat_id: chatId,\n    rekap_text: msg\n  },\n  pairedItem: { item: 0 }\n}];"
+      },
+      "id": "node-code-format-rekap",
+      "name": "Code: Format Rekap Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.rekap_text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "node-tg-send-rekap",
+      "name": "Telegram: Send Rekap",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1160,
+        340
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_bot_credentials",
+          "name": "Telegram Bot Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=YOUR_GEMINI_API_KEY",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  contents: [{\n    parts: [{\n      text: 'Kamu adalah parser transaksi keuangan pribadi cerdas. Tugas: Ekstrak data transaksi dari kalimat user: \"' + ($json.message?.text || '') + '\". Aturan: 1. \"type\" bernilai \"expense\" (pengeluaran) atau \"income\" (pemasukan). 2. \"category\" pilih salah satu yang paling cocok dari: [\"Makanan\", \"Belanja\", \"Transportasi\", \"Kesehatan\", \"Tagihan\", \"Pendapatan\"]. Contoh: bayar kos/listrik/air masuk Tagihan, bensin masuk Transportasi, makan/minum masuk Makanan, gaji/bonus masuk Pendapatan. 3. \"amount\" bernilai integer rupiah murni tanpa desimal (konversi: k/rb = ribu, jt = juta). 4. \"description\" ringkasan transaksi 2-5 kata. 5. JIKA pesan user BUKAN transaksi keuangan (misal: salam, sapaan, percakapan umum, meeting/rapat), wajib set \"amount\": 0 dan \"description\": \"non-transaksi\". Wajib kembalikan format JSON murni: {\"type\": string, \"category\": string, \"amount\": number, \"description\": string}.'\n    }]\n  }],\n  generationConfig: {\n    temperature: 0.1,\n    responseMimeType: 'application/json'\n  }\n}) }}"
+      },
+      "id": "node-http-gemini",
+      "name": "HTTP Request: Gemini AI Parser",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        560
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const triggerItem = $('Telegram Trigger').first().json;\nconst rawMessage = (triggerItem.message?.text || '').trim();\nconst telegramUserId = triggerItem.message?.from?.id;\nconst chatId = triggerItem.message?.chat?.id;\n\nlet aiRaw = '';\ntry {\n  aiRaw = $json.candidates[0].content.parts[0].text;\n} catch (e) {\n  aiRaw = '{}';\n}\n\nlet parsed = {};\ntry {\n  const cleaned = aiRaw.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();\n  parsed = JSON.parse(cleaned);\n} catch (e) {\n  parsed = {};\n}\n\nlet type = (parsed.type || 'expense').toLowerCase().trim();\nif (type !== 'expense' && type !== 'income') {\n  type = 'expense';\n}\n\nlet category = (parsed.category || '').trim();\nconst validCategories = ['Makanan', 'Belanja', 'Transportasi', 'Kesehatan', 'Tagihan', 'Pendapatan'];\nif (!validCategories.includes(category)) {\n  category = type === 'income' ? 'Pendapatan' : 'Belanja';\n}\n\nlet amount = Number(parsed.amount) || 0;\nconst isValid = amount > 0 && !isNaN(amount);\n\nlet description = (parsed.description || rawMessage).trim();\nif (!description || description.toLowerCase() === 'non-transaksi' || description.toLowerCase() === 'bukan transaksi') {\n  description = rawMessage.trim();\n}\nif (description.length > 255) {\n  description = description.substring(0, 255);\n}\n\nconst escapedDescription = description.replace(/'/g, \"''\").replace(/\\\\/g, '\\\\\\\\');\nconst escapedRawMessage = rawMessage.replace(/'/g, \"''\").replace(/\\\\/g, '\\\\\\\\');\n\nreturn [{\n  json: {\n    telegram_user_id: telegramUserId,\n    chat_id: chatId,\n    raw_message: rawMessage,\n    escaped_raw_message: escapedRawMessage,\n    type: type,\n    category: category,\n    amount: amount,\n    description: description,\n    escaped_description: escapedDescription,\n    is_valid: isValid\n  },\n  pairedItem: { item: 0 }\n}];"
+      },
+      "id": "node-code-parse-ai",
+      "name": "Code: Parse & Validate AI Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.is_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "node-if-valid",
+      "name": "If: Is Valid Transaction?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO transactions (telegram_user_id, type, category, amount, description, raw_message, transaction_date)\nVALUES (\n  {{ $json.telegram_user_id }},\n  '{{ $json.type }}',\n  '{{ $json.category }}',\n  {{ $json.amount }},\n  '{{ $json.escaped_description }}',\n  '{{ $json.escaped_raw_message }}',\n  NOW()\n)\nRETURNING id, transaction_date;"
+      },
+      "id": "node-pg-save-transaction",
+      "name": "Postgres: Save Transaction",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1400,
+        480
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "postgres_credentials",
+          "name": "Postgres KDJK Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT \n  COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) AS today_total_expense,\n  COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) AS today_total_income\nFROM transactions\nWHERE telegram_user_id = {{ $('Code: Parse & Validate AI Output').first().json.telegram_user_id }}\n  AND transaction_date >= CURRENT_DATE;"
+      },
+      "id": "node-pg-query-today",
+      "name": "Postgres: Query Total Expense Today",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1620,
+        480
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "postgres_credentials",
+          "name": "Postgres KDJK Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const parsedItem = $('Code: Parse & Validate AI Output').first().json;\nconst summary = $json;\n\nconst formatRp = (num) => 'Rp ' + Number(num || 0).toLocaleString('id-ID');\nconst isExpense = parsedItem.type === 'expense';\nconst icon = isExpense ? '💸' : '💰';\nconst typeLabel = isExpense ? 'Pengeluaran' : 'Pemasukan';\n\nlet categoryIcon = '📦';\nswitch (parsedItem.category) {\n  case 'Makanan': categoryIcon = '🍔'; break;\n  case 'Belanja': categoryIcon = '🛍️'; break;\n  case 'Transportasi': categoryIcon = '🛵'; break;\n  case 'Kesehatan': categoryIcon = '💊'; break;\n  case 'Tagihan': categoryIcon = '🧾'; break;\n  case 'Pendapatan': categoryIcon = '💵'; break;\n}\n\nconst todayExpense = Number(summary.today_total_expense || 0);\nconst todayIncome = Number(summary.today_total_income || 0);\n\nconst safeDesc = (parsedItem.description || '').replace(/([_*[`])/g, '\\\\$1');\n\nlet msg = `✅ *Transaksi Berhasil Dicatat!*\\n\\n`;\nmsg += `${icon} *Tipe:* ${typeLabel}\\n`;\nmsg += `${categoryIcon} *Kategori:* ${parsedItem.category}\\n`;\nmsg += `💵 *Nominal:* *${formatRp(parsedItem.amount)}*\\n`;\nmsg += `📝 *Keterangan:* ${safeDesc}\\n\\n`;\nmsg += `────────────────────\\n`;\nmsg += `📊 *Total Hari Ini:*\\n`;\nmsg += `🔺 Pengeluaran : *${formatRp(todayExpense)}*\\n`;\nmsg += `🟢 Pemasukan   : *${formatRp(todayIncome)}*\\n\\n`;\nmsg += `💡 _Ketik /rekap untuk melihat rekapitulasi lengkap bulan ini._`;\n\nreturn [{\n  json: {\n    chat_id: parsedItem.chat_id,\n    text: msg\n  },\n  pairedItem: { item: 0 }\n}];"
+      },
+      "id": "node-code-format-confirm",
+      "name": "Code: Format Confirmation Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "node-tg-send-confirm",
+      "name": "Telegram: Send Confirmation",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2060,
+        480
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_bot_credentials",
+          "name": "Telegram Bot Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Code: Parse & Validate AI Output').first().json.chat_id }}",
+        "text": "=🤔 *Format transaksi belum dikenali.*\n\nMohon sebutkan nominal uang belanja atau pemasukan Anda secara jelas.\n\n*Contoh input yang didukung:*\n• `beli makan 15rb`\n• `bayar kos 850rb`\n• `bensin motor 25000`\n• `gaji freelance 2jt`\n\nKetik `/rekap` untuk melihat rekap keuangan atau `/start` untuk melihat bantuan.",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "node-tg-clarification",
+      "name": "Telegram: Send Clarification Help",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1400,
+        660
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_bot_credentials",
+          "name": "Telegram Bot Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch: Route Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Route Command": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Send Welcome Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres: Query Rekap",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request: Gemini AI Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Query Rekap": {
+      "main": [
+        [
+          {
+            "node": "Code: Format Rekap Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Format Rekap Message": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Send Rekap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request: Gemini AI Parser": {
+      "main": [
+        [
+          {
+            "node": "Code: Parse & Validate AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Parse & Validate AI Output": {
+      "main": [
+        [
+          {
+            "node": "If: Is Valid Transaction?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: Is Valid Transaction?": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Save Transaction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Send Clarification Help",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Save Transaction": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Query Total Expense Today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Query Total Expense Today": {
+      "main": [
+        [
+          {
+            "node": "Code: Format Confirmation Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Format Confirmation Message": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Send Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

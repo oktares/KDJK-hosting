@@ -338,7 +338,7 @@ Implementasi sistem *Self-Hosted n8n* yang dipadukan dengan Google Gemini AI dan
 - **Otomasi Pemeliharaan & GitOps**: Dilengkapi skrip pencadangan otomatis harian dan pipeline CI/CD GitHub Actions untuk kemudahan deployment berkelanjutan.
 
 ### 3. Kekurangan
-- **Ketergantungan Kuota Free-Tier AI**: Penggunaan Google Gemini free-tier memiliki kuota terbatas (15 Request per Minute), sehingga untuk adopsi berskala tim/organisasi disarankan beralih ke tier berbayar (*Pay-as-you-go*) atau model lokal.
+- **Ketergantungan Kuota Free-Tier AI**: Penggunaan Google Gemini free-tier memiliki kuota terbatas (15 Request per Minute), sehingga untuk pemakaian berskala tim/organisasi disarankan beralih ke tier berbayar (*Pay-as-you-go*) atau model lokal.
 - **Tuntutan Pengetahuan Pemeliharaan**: Karena berstatus *self-hosted*, pengguna bertanggung jawab mandiri atas manajemen patch keamanan Linux kernel, pembaruan versi Docker, dan ketersediaan ruang harddisk server.
 
 ### 4. Perbandingan dengan Aplikasi Sejenis: Self-Hosted n8n vs Zapier

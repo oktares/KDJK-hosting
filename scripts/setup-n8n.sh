@@ -28,10 +28,12 @@ read -rp "Masukkan Subdomain (contoh: n8n): " INPUT_SUBDOMAIN
 read -rp "Masukkan Domain Utama (contoh: perusahaan.com): " INPUT_DOMAIN
 read -rp "Masukkan Email untuk Sertifikat SSL Let's Encrypt: " INPUT_EMAIL
 read -rp "Masukkan Google Gemini API Key [Tekan Enter untuk memakai default]: " INPUT_GEMINI_KEY
+read -rp "Masukkan Groq API Key [Tekan Enter untuk memakai default]: " INPUT_GROQ_KEY
 
 INPUT_SUBDOMAIN=${INPUT_SUBDOMAIN:-n8n}
 INPUT_DOMAIN="${INPUT_DOMAIN#.}"
 INPUT_GEMINI_KEY=${INPUT_GEMINI_KEY:-YOUR_GEMINI_API_KEY}
+INPUT_GROQ_KEY=${INPUT_GROQ_KEY:-YOUR_GROQ_API_KEY}
 if [[ -z "$INPUT_DOMAIN" || -z "$INPUT_EMAIL" ]]; then
     echo -e "${RED}[ERROR] Domain dan Email tidak boleh kosong!${NC}"
     exit 1
@@ -114,6 +116,7 @@ N8N_LOG_LEVEL=info
 N8N_DIAGNOSTICS_ENABLED=false
 
 GEMINI_API_KEY=${INPUT_GEMINI_KEY}
+GROQ_API_KEY=${INPUT_GROQ_KEY}
 EOF
 
 # Salin docker-compose.yml, Caddyfile, scripts (termasuk init-db.sql), dan workflows
@@ -135,6 +138,7 @@ fi
 chmod +x "${INSTALL_DIR}"/scripts/*.sh 2>/dev/null || true
 if [ -f "${INSTALL_DIR}/workflows/personal-finance-bot.json" ]; then
     sed -i "s|YOUR_GEMINI_API_KEY|${INPUT_GEMINI_KEY}|g" "${INSTALL_DIR}/workflows/personal-finance-bot.json"
+    sed -i "s|YOUR_GROQ_API_KEY|${INPUT_GROQ_KEY}|g" "${INSTALL_DIR}/workflows/personal-finance-bot.json"
 fi
 
 # 8. Jalankan Container

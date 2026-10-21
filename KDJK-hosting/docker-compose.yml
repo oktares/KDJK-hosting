@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # =========================================================================
+  # Reverse Proxy: Caddy with Automatic HTTPS (Let's Encrypt)
+  # =========================================================================
+  caddy:
+    image: caddy:2-alpine
+    container_name: n8n_caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - n8n_network
+    depends_on:
+      - n8n
+
+  # =========================================================================
+  # Database: PostgreSQL 16
+  # =========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: n8n_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-n8n_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeMeSecurePassword123}
+      POSTGRES_DB: ${POSTGRES_DB:-n8n_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - n8n_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U ${POSTGRES_USER:-n8n_user} -d ${POSTGRES_DB:-n8n_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # =========================================================================
+  # Workflow Automation: n8n
+  # =========================================================================
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n_app
+    restart: unless-stopped
+    environment:
+      # Network & Domain Settings
+      - N8N_HOST=${SUBDOMAIN}.${DOMAIN_NAME}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://${SUBDOMAIN}.${DOMAIN_NAME}/
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-Asia/Jakarta}
+      - TZ=${GENERIC_TIMEZONE:-Asia/Jakarta}
+
+      # Database Configuration (PostgreSQL)
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-n8n_db}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER:-n8n_user}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-ChangeMeSecurePassword123}
+
+      # Security & Encryption Key
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+
+      # Performance & Execution Pruning
+      - EXECUTIONS_DATA_PRUNE=true
+      - EXECUTIONS_DATA_MAX_AGE=168
+      - EXECUTIONS_DATA_PRUNE_MAX_COUNT=50000
+      - N8N_PAYLOAD_SIZE_MAX=128
+
+      # Community Nodes & Custom Code Modules
+      - N8N_COMMUNITY_PACKAGES_ENABLED=true
+      - NODE_FUNCTION_ALLOW_EXTERNAL=lodash,axios,moment,crypto-js
+
+      # Logging & Diagnostics
+      - N8N_LOG_LEVEL=info
+      - N8N_DIAGNOSTICS_ENABLED=false
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./local_files:/data/local_files
+    networks:
+      - n8n_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+        reservations:
+          memory: 512M
+
+volumes:
+  caddy_data:
+  caddy_config:
+  postgres_data:
+  n8n_data:
+
+networks:
+  n8n_network:
+    driver: bridge

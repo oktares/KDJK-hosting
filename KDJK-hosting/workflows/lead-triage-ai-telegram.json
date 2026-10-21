@@ -1,0 +1,127 @@
+{
+  "name": "AI Lead Triage & Telegram Notification System",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "submit-inquiry",
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook Form Landing Page",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        260,
+        340
+      ],
+      "webhookId": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sanitasi dan validasi data lead dummy masuk\nconst input = $json.body || $json;\n\nconst fullName = (input.full_name || 'Budi Santoso').trim();\nconst email = (input.email || 'budi.santoso@startupindonesia.co.id').toLowerCase();\nconst company = input.company || 'PT Solusi Bangun Digital';\nconst budgetUsd = Number(input.budget_usd) || 3500;\nconst message = input.message || 'Kami butuh integrasi automasi database CRM ke WhatsApp API dan Telegram dalam 2 minggu.';\n\n// Evaluasi awal\nconst isCorporateEmail = !email.endsWith('@gmail.com') && !email.endsWith('@yahoo.com');\nconst preliminaryScore = budgetUsd >= 3000 ? 85 : 50;\n\nreturn [{\n  json: {\n    lead_id: 'LEAD-' + Math.floor(100000 + Math.random() * 900000),\n    full_name: fullName,\n    email: email,\n    company: company,\n    budget_usd: budgetUsd,\n    is_corporate: isCorporateEmail,\n    preliminary_score: preliminaryScore,\n    raw_message: message,\n    submitted_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "2",
+      "name": "Code: Cleanse & Score Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {
+          "temperature": 0.2
+        },
+        "prompt": "=Analisis lead berikut secara profesional:\nNama: {{ $json.full_name }}\nPerusahaan: {{ $json.company }}\nBudget: ${{ $json.budget_usd }}\nPesan Klien: {{ $json.raw_message }}\n\nFormat output JSON wajib:\n{\n  \"priority\": \"HIGH | MEDIUM | LOW\",\n  \"classification\": \"HOT LEAD | WARM LEAD | COLD LEAD\",\n  \"executive_summary\": \"Ringkasan 2 kalimat dalam Bahasa Indonesia\",\n  \"suggested_solution\": \"Solusi teknologi yang disarankan\"\n}"
+      },
+      "id": "3",
+      "name": "OpenAI: AI Lead Classifier",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        700,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO sales_leads (lead_id, full_name, email, company, budget, priority, summary, created_at)\nVALUES ('{{ $('Code: Cleanse & Score Data').item.json.lead_id }}', '{{ $('Code: Cleanse & Score Data').item.json.full_name }}', '{{ $('Code: Cleanse & Score Data').item.json.email }}', '{{ $('Code: Cleanse & Score Data').item.json.company }}', {{ $('Code: Cleanse & Score Data').item.json.budget_usd }}, '{{ $json.priority }}', '{{ $json.executive_summary }}', NOW());"
+      },
+      "id": "4",
+      "name": "Postgres: Save to DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        920,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "-1001987654321",
+        "text": "=🚨 *NEW HOT LEAD DETECTED!* 🚨\n\n👤 *Klien:* {{ $('Code: Cleanse & Score Data').item.json.full_name }} ({{ $('Code: Cleanse & Score Data').item.json.company }})\n📧 *Email:* {{ $('Code: Cleanse & Score Data').item.json.email }}\n💰 *Budget:* ${{ $('Code: Cleanse & Score Data').item.json.budget_usd }}\n🔥 *Status:* `{{ $json.classification }}` (Priority: {{ $json.priority }})\n\n📝 *Analisis AI:*\n{{ $json.executive_summary }}\n\n💡 *Saran Solusi:*\n{{ $json.suggested_solution }}\n\n🆔 *Lead ID:* `{{ $('Code: Cleanse & Score Data').item.json.lead_id }}`",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "5",
+      "name": "Telegram: Alert Sales Team",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        920,
+        440
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Form Landing Page": {
+      "main": [
+        [
+          {
+            "node": "Code: Cleanse & Score Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Cleanse & Score Data": {
+      "main": [
+        [
+          {
+            "node": "OpenAI: AI Lead Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI: AI Lead Classifier": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Save to DB",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram: Alert Sales Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

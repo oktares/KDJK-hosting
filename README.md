@@ -62,86 +62,123 @@ Pengguna tidak perlu mengisi formulir manual yang kaku. Cukup mengirimkan pesan 
 
 Sebelum memulai proses instalasi, siapkan beberapa kebutuhan berikut:
 
-| Kebutuhan | Spesifikasi / Keterangan |
-| :--- | :--- |
-| **Server VPS** | Cloud VPS Linux (Ubuntu 24.04 LTS direkomendasikan), min. 1 vCPU, 1 GB RAM, IP Publik statis. |
-| **Domain / DDNS** | Akun gratis [DuckDNS](https://www.duckdns.org) dengan subdomain terarah ke IP VPS (contoh: `keuangan-kdjk.duckdns.org`). |
-| **Bot Telegram** | HTTP Bot Token dari [@BotFather](https://t.me/BotFather) di Telegram. |
-| **Google Gemini API** | API Key dari [Google AI Studio](https://aistudio.google.com). |
-| **Akses Jaringan** | Hak akses root/sudo via protokol OpenSSH (port 22). |
+| Kebutuhan | Spesifikasi / Keterangan | Fungsi Utama |
+| :--- | :--- | :--- |
+| **Server VPS** | Cloud VPS Linux (Ubuntu 24.04 LTS direkomendasikan), min. 1 vCPU, 1–2 GB RAM, IP Publik statis. | Host utama seluruh kontainer Docker. |
+| **Domain / DDNS** | Akun gratis [DuckDNS](https://www.duckdns.org) terarah ke IP VPS (contoh: `keuangan-kdjk.duckdns.org`). | Pengalamatan FQDN untuk SSL & Webhook Telegram. |
+| **Bot Telegram** | HTTP Bot Token dari [@BotFather](https://t.me/BotFather) di Telegram. | Antarmuka percakapan interaktif pengguna. |
+| **Google Gemini / Groq API** | API Key dari [Google AI Studio](https://aistudio.google.com) atau [Groq Console](https://console.groq.com). | Mesin pemroses bahasa alami (NLP parser). |
+| **Akses Remote** | Akses root/sudo via protokol OpenSSH (port 22). | Media eksekusi perintah terminal server. |
 
 ---
 
-### 2. Ilustrasi Alur Instalasi Sistem
+### 2. Peta Alur Instalasi Sistem (Setup Roadmap)
 
-```text
-[Internet / User]
-       │
-       ▼
- [Port 80/443] ──► [UFW Firewall Host]
-                          │
-                          ▼
-             [Caddy Ingress Reverse Proxy] (Auto SSL)
-                          │ (Internal Docker Bridge: 172.20.0.0/16)
-                          ├──► [n8n Workflow Engine: 5678]
-                          │           │
-                          │           ▼
-                          │    [PostgreSQL 16: 5432] (Port Terisolasi)
-                          ▼
-               [DuckDNS Auto-Update via Cron]
+Berikut adalah alur tahapan instalasi dari nol hingga bot aktif dan siap melayani:
+
+```mermaid
+flowchart TD
+    subgraph Step1 ["1️⃣ Konfigurasi Domain (DuckDNS)"]
+        D1["Daftar Subdomain DuckDNS<br/>(contoh: keuangan-kdjk)"] --> D2["Pointing ke IP Publik VPS"]
+        D2 --> D3["Pasang Auto-Updater via Crontab"]
+    end
+
+    subgraph Step2 ["2️⃣ Persiapan Direktori Server"]
+        S1["Login SSH ke VPS"] --> S2["Git Clone ke /opt/n8n"]
+        S2 --> S3["Beri Izin Eksekusi Skrip"]
+    end
+
+    subgraph Step3 ["3️⃣ Otomasi 1-Klik (setup-n8n.sh)"]
+        O1["Update OS & Firewall UFW (22, 80, 443)"] --> O2["Alokasi 2GB Swap Memory (Anti-OOM)"]
+        O2 --> O3["Install Resmi Docker Engine & Compose v2"]
+        O3 --> O4["Generate Kunci Kriptografi & File .env"]
+        O4 --> O5["Jalankan Stack Caddy, n8n, dan PostgreSQL"]
+    end
+
+    subgraph Step4 ["4️⃣ Verifikasi & Hubungkan Kredensial"]
+        V1["Cek Status: docker compose ps"] --> V2["Akses Dashboard HTTPS via Peramban"]
+        V2 --> V3["Input Bot Token Telegram & Akun Postgres"]
+        V3 --> V4["Bot Aktif & Siap Digunakan! 🚀"]
+    end
+
+    Step1 --> Step2 --> Step3 --> Step4
 ```
 
 ---
 
 ### 3. Langkah-demi-Langkah Instalasi
 
-#### Langkah 1: Akses Remote & Pembaruan Server
-Masuk ke terminal server VPS menggunakan SSH:
+#### Langkah 1: Setup Domain Dynamic DNS (DuckDNS)
+1. Buka [DuckDNS](https://www.duckdns.org), login (menggunakan akun Google/GitHub), lalu buat subdomain baru (misalnya `keuangan-kdjk`).
+2. Masukkan alamat IP publik VPS Anda pada kolom **Current IP**, lalu klik **Update IP**.
+3. Agar IP domain selalu diperbarui otomatis jika terjadi pergantian IP VPS, pasang skrip *daemon updater* di server VPS:
+   ```bash
+   mkdir -p /opt/duckdns
+   cat << 'EOF' > /opt/duckdns/duck.sh
+   #!/usr/bin/env bash
+   curl -s "https://www.duckdns.org/update?domains=keuangan-kdjk&token=<TOKEN_DUCKDNS>&ip="
+   EOF
+   chmod 700 /opt/duckdns/duck.sh
+   (crontab -l 2>/dev/null; echo "*/5 * * * * /opt/duckdns/duck.sh >/dev/null 2>&1") | crontab -
+   ```
+
+#### Langkah 2: Kloning Repositori ke Direktori Produksi (`/opt/n8n`)
+Masuk ke terminal VPS Anda melalui SSH, lalu kloning repositori **langsung ke direktori `/opt/n8n`** (penting agar pipeline Git CI/CD GitHub Actions terhubung sempurna):
 ```bash
+# 1. Login ke server VPS
 ssh root@<IP_PUBLIK_VPS>
-apt-get update -y && apt-get upgrade -y
-apt-get install -y curl wget git ufw dnsutils
+
+# 2. Kloning repositori ke folder instalasi permanen
+git clone https://github.com/oktares/KDJK-hosting.git /opt/n8n
+cd /opt/n8n
+
+# 3. Berikan izin eksekusi pada seluruh skrip otomasi
+chmod +x scripts/*.sh scripts/*.py
 ```
 
-#### Langkah 2: Konfigurasi Keamanan Jaringan (Firewall UFW)
-Terapkan kebijakan keamanan *Default-Deny*:
+#### Langkah 3: Eksekusi Skrip Instalasi 1-Klik (`setup-n8n.sh`)
+Jalankan skrip otomasi instalasi. Skrip ini secara mandiri menangani konfigurasi firewall UFW, optimasi Swap RAM 2GB, instalasi Docker Engine, pembuatan kunci enkripsi, dan inisialisasi basis data:
 ```bash
-ufw default deny incoming
-ufw default allow outgoing
-ufw allow 22/tcp comment 'SSH'
-ufw allow 80/tcp comment 'HTTP / ACME'
-ufw allow 443/tcp comment 'HTTPS'
-ufw --force enable
-```
-
-#### Langkah 3: Setup Domain Dynamic DNS (DuckDNS)
-1. Buka [DuckDNS](https://www.duckdns.org), login dan buat domain, misal `keuangan-kdjk`.
-2. Arahkan **Current IP** ke alamat IP publik VPS Anda.
-3. Buat skrip auto-updater di VPS (`/opt/duckdns/duck.sh`) dan pasang pada crontab:
-```bash
-mkdir -p /opt/duckdns
-cat << 'EOF' > /opt/duckdns/duck.sh
-#!/usr/bin/env bash
-curl -s "https://www.duckdns.org/update?domains=keuangan-kdjk&token=<TOKEN_DUCKDNS>&ip="
-EOF
-chmod 700 /opt/duckdns/duck.sh
-(crontab -l 2>/dev/null; echo "*/5 * * * * /opt/duckdns/duck.sh >/dev/null 2>&1") | crontab -
-```
-
-#### Langkah 4: Kloning Repositori & Eksekusi Skrip Instalasi 1-Klik
-```bash
-git clone https://github.com/oktares/KDJK-hosting.git /tmp/KDJK-hosting
-cd /tmp/KDJK-hosting
-chmod +x scripts/*.sh
 sudo bash scripts/setup-n8n.sh
 ```
-Ikuti instruksi interaktif pada layar untuk memasukkan nama domain, email SSL, serta API Key.
 
-#### Langkah 5: Verifikasi Status Kontainer
-Pastikan seluruh kontainer berada dalam status `Up` / `healthy`:
+**Panduan Menjawab Input Interaktif Terminal:**
+| Prompt Terminal | Contoh Isian (Rekomendasi) | Catatan Penting |
+| :--- | :--- | :--- |
+| `Masukkan Subdomain` | `keuangan-kdjk` | **Hanya ketikkan nama depan subdomain**, jangan sertakan `.duckdns.org`. |
+| `Masukkan Domain Utama` | `duckdns.org` | Domain induk DuckDNS. |
+| `Masukkan Email SSL` | `namaanda@gmail.com` | Email aktif untuk penerbitan sertifikat SSL otomatis Let's Encrypt. |
+| `Google Gemini API Key` | `AIzaSy...` *(atau tekan Enter)* | API Key dari Google AI Studio. |
+| `Groq API Key` | `gsk_...` *(atau tekan Enter)* | API Key dari Groq Console (sangat disarankan untuk respon super-cepat). |
+
+#### Langkah 4: Verifikasi Kesiapan Layanan (Health Check)
+Setelah skrip selesai dijalankan, pastikan seluruh kontainer berada dalam kondisi sehat (*Up / healthy*):
 ```bash
-cd /opt/n8n && docker compose ps
+docker compose ps
 ```
+*Output yang diharapkan:*
+* `n8n_caddy` $ightarrow$ Status: `Up` (Port `80`, `443`)
+* `n8n_app` $ightarrow$ Status: `Up` (Port internal `5678`)
+* `n8n_postgres` $ightarrow$ Status: `Up (healthy)` (Port internal `5432`)
+
+> 💡 **Verifikasi Sertifikat SSL Caddy:**  
+> Jalankan perintah `docker compose logs caddy | grep -i certificate` untuk memastikan sertifikat TLS/SSL Let's Encrypt berhasil diterbitkan tanpa kendala.
+
+#### Langkah 5: Hubungkan Kredensial di Dashboard Web n8n
+Setelah kontainer aktif, alur kerja perlu dihubungkan dengan token Bot Telegram Anda:
+1. Buka peramban (browser) dan akses alamat: **`https://<subdomain>.duckdns.org`** (contoh: `https://keuangan-kdjk.duckdns.org`).
+2. Buat akun Administrator n8n pada formulir setup awal (*Nama, Email, Password*).
+3. Masuk ke menu **Credentials** pada bilah samping kiri $ightarrow$ Klik **Add Credential**:
+   * **Telegram API**: Pilih *Telegram API*, masukkan **Bot Token** yang didapat dari `@BotFather`, lalu klik *Save*.
+   * **PostgreSQL**: Pilih *Postgres*, masukkan detail koneksi:
+     * *Host*: `postgres`
+     * *Database*: `n8n_db`
+     * *User*: `n8n_admin`
+     * *Password*: *(Gunakan password database yang dicetak di akhir eksekusi `setup-n8n.sh` atau pada file `.env`)*
+     * *Port*: `5432`
+     * *SSL*: `disable`
+4. Buka menu **Workflows**, buka alur kerja **Bot Manajemen Keuangan Pribadi**, lalu klik tombol **Publish / Active** di pojok kanan atas.
+5. Buka Telegram Anda, kirim pesan `/start` atau langsung catat transaksi (misal: *"makan siang 20rb"*), dan bot akan langsung merespons!
 
 ---
 
